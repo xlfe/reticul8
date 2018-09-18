@@ -27,13 +27,50 @@ void error_handler(uint8_t code, uint16_t data, void *custom_pointer) {
         ESP_LOGE("MAIN", "Content is too long, length: %d",data);
     }
 }
+
+
 void RETICUL8::begin(){
     bus->set_custom_pointer(this);
     bus->set_receiver(receiver_function);
     bus->set_error(error_handler);
     bus->set_crc_32(true);
     bus->begin();
-//    bus->send_repeatedly(master_id, data, PJON_PACKET_MAX_LENGTH -10, 10000000);
+
+
+    EVENT event = EVENT_init_zero;
+    STARTUP startup = STARTUP_init_zero;
+    event.which_event = EVENT_startup_tag;
+    event.event.startup = startup;
+
+#ifdef ESP32
+    {
+        startup.has_reason = true;
+        startup.reason = StartupReason_SR_UNKNOWN;
+
+        switch (rtc_get_reset_reason(0))
+        {
+            case 1 : startup.reason  = StartupReason_ESP32_POWERON_RESET; break;
+            case 3 : startup.reason = StartupReason_ESP32_SW_RESET;break;
+            case 4 : startup.reason = StartupReason_ESP32_OWDT_RESET;break;
+            case 5 : startup.reason = StartupReason_ESP32_DEEPSLEEP_RESET;break;
+            case 6 : startup.reason = StartupReason_ESP32_SDIO_RESET;break;
+            case 7 : startup.reason = StartupReason_ESP32_TG0WDT_SYS_RESET;break;
+            case 8 : startup.reason = StartupReason_ESP32_TG1WDT_SYS_RESET;break;
+            case 9 : startup.reason = StartupReason_ESP32_RTCWDT_SYS_RESET;break;
+            case 10 : startup.reason = StartupReason_ESP32_INTRUSION_RESET;break;
+            case 11 : startup.reason = StartupReason_ESP32_TGWDT_CPU_RESET;break;
+            case 12 : startup.reason = StartupReason_ESP32_SW_CPU_RESET;break;
+            case 13 : startup.reason = StartupReason_ESP32_RTCWDT_CPU_RESET;break;
+            case 14 : startup.reason = StartupReason_ESP32_EXT_CPU_RESET;break;
+            case 15 : startup.reason = StartupReason_ESP32_RTCWDT_BROWN_OUT_RESET;break;
+            case 16 : startup.reason = StartupReason_ESP32_RTCWDT_RTC_RESET;break;
+            case NO_MEAN: break;
+        }
+    }
+#endif
+
+    this->notify_event(event);
+
 }
 
 void RETICUL8::loop() {

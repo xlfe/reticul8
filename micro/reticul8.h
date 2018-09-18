@@ -25,6 +25,7 @@
 #define LEDC_NOT_IN_USE 0
 #define LEDC_IN_USE 1
 
+#include <rom/rtc.h>
 #include "driver/ledc.h"
 
 #define RETICUL8_MAX_LEDC_CHANNELS LEDC_CHANNEL_MAX

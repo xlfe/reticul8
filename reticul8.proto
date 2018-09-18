@@ -173,9 +173,33 @@ message PIN_CHANGE {
     required PinValue value =2;
 }
 
+enum StartupReason {
+    SR_UNKNOWN = 1;
+    ESP32_POWERON_RESET = 2;
+    ESP32_SW_RESET = 3;
+    ESP32_OWDT_RESET = 4;
+    ESP32_DEEPSLEEP_RESET = 5;
+    ESP32_SDIO_RESET = 6;
+    ESP32_TG0WDT_SYS_RESET = 7;
+    ESP32_TG1WDT_SYS_RESET = 8;
+    ESP32_RTCWDT_SYS_RESET = 9;
+    ESP32_INTRUSION_RESET = 10;
+    ESP32_TGWDT_CPU_RESET = 11;
+    ESP32_SW_CPU_RESET = 12;
+    ESP32_RTCWDT_CPU_RESET = 13;
+    ESP32_EXT_CPU_RESET = 14;
+    ESP32_RTCWDT_BROWN_OUT_RESET = 15;
+    ESP32_RTCWDT_RTC_RESET = 16;
+}
+
+message STARTUP {
+    optional StartupReason reason =1;
+}
+
 message EVENT
 {
     oneof event {
         PIN_CHANGE pin_change = 1;
+        STARTUP startup = 2;
     }
 }
