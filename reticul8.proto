@@ -115,6 +115,12 @@ message I2C_READ {
 message PING {}
 message SYSINFO {}
 
+message SCHEDULE {
+    required uint32 run_count = 1;
+    required uint32 run_every_ms = 2;
+    optional uint32 start_after_ms = 3;
+}
+
 
 message RPC {
     oneof call {
@@ -137,6 +143,7 @@ message RPC {
         OTA_UPDATE ota_update = 100;
     }
     required uint32 msg_id = 200;
+    optional SCHEDULE schedule = 201;
 }
 
 enum ResultType {

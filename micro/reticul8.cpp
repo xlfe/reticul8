@@ -8,6 +8,7 @@ RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id) {
 #if ESP32
     memset(&this->ledc_channels, 0, sizeof this->ledc_channels);
 #endif
+    memset(&this->scheduled_commands, 0, sizeof this->scheduled_commands);
 
 }
 
@@ -37,6 +38,7 @@ void RETICUL8::begin(){
 
 void RETICUL8::loop() {
     check_for_events();
+    check_for_scheduled_commands();
     bus->receive();
     bus->update();
     vTaskDelay(1);
@@ -56,6 +58,19 @@ void RETICUL8::notify_event(EVENT event) {
     }
 }
 
+void RETICUL8::check_for_scheduled_commands() {
+
+    for (uint16_t i = 0; i < RETICUL8_MAX_SCHEDULED_COMMANDS; i++) {
+        if (this->scheduled_commands[i].state == SCHEDULE_COMMAND_IN_USE) {
+
+            //Check params
+        }
+    }
+}
+
+bool RETICUL8::add_scheduled_commands(uint8_t *data, uint8_t data_len, uint32_t run_count, uint32_t run_every_ms, uint32_t next_execution) {
+    return false;
+}
 
 void RETICUL8::check_for_events() {
 
@@ -300,10 +315,19 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
         return;
     }
 
+
+    if (request.has_schedule) {
+
+        return;
+    }
+
+
     uint8_t reply_buf[CALL_REPLY_size];
     CALL_REPLY reply = CALL_REPLY_init_zero;
     reply.msg_id = request.msg_id;
     reply.result = ResultType_RT_ERROR;
+
+
 
     switch (request.which_call) {
         case (RPC_gpio_config_tag):
@@ -439,7 +463,6 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
                 }
             }
             break;
-
 
         default:
             reply.result = ResultType_RT_UNKNOWN;

@@ -37,6 +37,21 @@ struct LEDC_CHANNEL {
 #endif
 
 
+#define RETICUL8_MAX_SCHEDULED_COMMANDS 20
+#define SCHEDULE_COMMAND_NOT_IN_USE 0
+#define SCHEDULE_COMMAND_IN_USE 1
+
+struct SCHEDULED_COMMAND {
+    uint8_t state;
+    uint32_t run_count;
+    uint32_t run_every_ms;
+    uint32_t next_execution;
+
+    uint8_t data[PJON_PACKET_MAX_LENGTH];
+    uint8_t data_len;
+};
+
+
 
 #define WATCH_NOT_IN_USE 0
 #define WATCH_IN_USE 1
@@ -90,6 +105,9 @@ private:
     uint8_t i2c_read(uint8_t device, uint8_t address, uint8_t len, uint8_t *buf);
 
 
+    struct SCHEDULED_COMMAND scheduled_commands[RETICUL8_MAX_SCHEDULED_COMMANDS];
+    void check_for_scheduled_commands();
+    bool add_scheduled_commands(uint8_t *data, uint8_t data_len, uint32_t run_count, uint32_t run_every_ms, uint32_t next_execution);
 
 
 };
