@@ -3,10 +3,8 @@
 RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id) {
     this->bus = bus;
     this->master_id = master_id;
+    memset(&this->watched_pins, 0, sizeof this->watched_pins);
 
-    for(uint16_t i = 0; i < RETICUL8_MAX_WATCHED_PINS; i++) {
-        this->watched_pins[i].state = WATCH_NOT_IN_USE;
-    }
 }
 
 void receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
@@ -34,14 +32,49 @@ void RETICUL8::begin(){
 }
 
 void RETICUL8::loop() {
+    check_for_events();
     bus->receive();
     bus->update();
     vTaskDelay(1);
 }
 
+void RETICUL8::notify_event(EVENT event) {
+
+}
+
 
 void RETICUL8::check_for_events() {
 
+    for (uint16_t i = 0; i < RETICUL8_MAX_WATCHED_PINS; i++) {
+        if (this->watched_pins[i].state == WATCH_IN_USE) {
+
+            uint8_t reading = digitalRead(this->watched_pins[i].pin);
+
+            if (reading != this->watched_pins[i].last_reading) {
+                this->watched_pins[i].last_debounce = millis();
+                this->watched_pins[i].last_reading = reading;
+            }
+
+            if ((millis() - this->watched_pins[i].last_debounce) > this->watched_pins[i].debounce_ms) {
+
+                if (reading != this->watched_pins[i].notified_value) {
+
+                    this->watched_pins[i].notified_value = reading;
+
+                    EVENT event = EVENT_init_zero;
+                    PIN_CHANGE pin_change = PIN_CHANGE_init_zero;
+                    pin_change.pin = this->watched_pins[i].pin;
+                    pin_change.value = reading == 0 ? PinValue_LOW : PinValue_HIGH;
+
+                    event.which_event = EVENT_pin_change_tag;
+                    event.event.pin_change = pin_change;
+
+                    this->notify_event(event);
+
+                }
+            }
+        }
+    }
 }
 
 bool RETICUL8::unwatch_pin(uint8_t pin) {
@@ -56,22 +89,28 @@ bool RETICUL8::unwatch_pin(uint8_t pin) {
     return false;
 }
 
-bool RETICUL8::watch_pin(uint8_t pin) {
+void RETICUL8::setup_watched_pin(WATCHED_PIN &p, uint8_t pin, uint16_t debounce_ms) {
+    p.state = WATCH_IN_USE;
+    p.pin = pin;
+    p.notified_value = 0xFF-1;
+    p.last_reading = 0xFF;
+    p.last_debounce = 0;
+    p.debounce_ms = debounce_ms;
+}
+
+bool RETICUL8::watch_pin(uint8_t pin, uint16_t debounce_ms) {
 
     for(uint16_t i = 0; i < RETICUL8_MAX_WATCHED_PINS; i++) {
         if (this->watched_pins[i].pin == pin) {
-            //Already watching this pin...
+            this->setup_watched_pin(this->watched_pins[i], pin, debounce_ms);
             return true;
         }
     }
 
     for(uint16_t i = 0; i < RETICUL8_MAX_WATCHED_PINS; i++) {
         if (this->watched_pins[i].state == WATCH_NOT_IN_USE) {
-
-            this->watched_pins[i].state = WATCH_IN_USE;
-
+            this->setup_watched_pin(this->watched_pins[i], pin, debounce_ms);
             return true;
-
         }
     }
 
@@ -93,8 +132,8 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
         return;
     }
 
-    uint8_t reply_buf[Call_Reply_size];
-    Call_Reply reply = Call_Reply_init_zero;
+    uint8_t reply_buf[CALL_REPLY_size];
+    CALL_REPLY reply = CALL_REPLY_init_zero;
     reply.msg_id = request.msg_id;
     reply.result = ResultType_RT_ERROR;
 
@@ -148,6 +187,12 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
             break;
 
         case (RPC_gpio_monitor_tag):
+
+            if (request.call.gpio_monitor.debounce_ms < 0xFFFF) {
+                if (this->watch_pin(request.call.gpio_monitor.pin, request.call.gpio_monitor.debounce_ms)) {
+                    reply.result = ResultType_RT_SUCCESS;
+                }
+            }
             break;
 
         case (RPC_pwm_config_tag):
@@ -169,7 +214,7 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
     }
 
     pb_ostream_t reply_stream = pb_ostream_from_buffer(reply_buf, sizeof(reply_buf));
-    status = pb_encode(&reply_stream, Call_Reply_fields, &reply);
+    status = pb_encode(&reply_stream, CALL_REPLY_fields, &reply);
 
     if (!status) {
         printf("Encoding failed: %s\n", PB_GET_ERROR(&reply_stream));

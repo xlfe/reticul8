@@ -128,7 +128,7 @@ enum ResultValue {
     PIN_LOW = 2;
 }
 
-message Call_Reply
+message CALL_REPLY
 {
     required ResultType result = 1;
     optional ResultValue value = 2;
@@ -136,14 +136,14 @@ message Call_Reply
 
 }
 
-message PinChanged {
+message PIN_CHANGE {
     required uint32 pin =1;
     required PinValue value =2;
 }
 
-message Event
+message EVENT
 {
     oneof event {
-        PinChanged pin_change = 1;
+        PIN_CHANGE pin_change = 1;
     }
 }
