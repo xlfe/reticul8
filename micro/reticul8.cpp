@@ -1,9 +1,13 @@
+#define ESP32 1
 #include "reticul8.h"
 
 RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id) {
     this->bus = bus;
     this->master_id = master_id;
     memset(&this->watched_pins, 0, sizeof this->watched_pins);
+#if ESP32
+    memset(&this->ledc_channels, 0, sizeof this->ledc_channels);
+#endif
 
 }
 
@@ -40,6 +44,16 @@ void RETICUL8::loop() {
 
 void RETICUL8::notify_event(EVENT event) {
 
+    uint8_t notify_buf[EVENT_size];
+
+    pb_ostream_t notify_stream = pb_ostream_from_buffer(notify_buf, sizeof(notify_buf));
+    bool status = pb_encode(&notify_stream, EVENT_fields, &event);
+
+    if (!status) {
+        printf("Encoding failed: %s\n", PB_GET_ERROR(&notify_stream));
+    } else {
+        this->bus->send(this->master_id, (char*)notify_buf, notify_stream.bytes_written);
+    }
 }
 
 
@@ -118,6 +132,160 @@ bool RETICUL8::watch_pin(uint8_t pin, uint16_t debounce_ms) {
 
 }
 
+#ifdef ESP32
+bool esp32_ledc_setup = false;
+
+bool setup_esp32_ledc_timer() {
+
+    if (esp32_ledc_setup) {
+        return true;
+    }
+
+    ledc_timer_config_t ledc_timer;
+    ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
+    ledc_timer.duty_resolution = LEDC_TIMER_13_BIT;
+    ledc_timer.timer_num = LEDC_TIMER_0;
+    ledc_timer.freq_hz = 5000;
+    if (ledc_timer_config(&ledc_timer) == ESP_OK) {
+        esp32_ledc_setup = true;
+        return true;
+    }
+
+    return false;
+}
+
+
+bool RETICUL8::setup_ledc_channel(uint8_t pin) {
+
+    if (!setup_esp32_ledc_timer()) {
+        return false;
+    }
+
+    for(uint16_t i = 0; i < RETICUL8_MAX_LEDC_CHANNELS; i++) {
+        if (this->ledc_channels[i].config.gpio_num == pin) {
+            return true;
+        }
+    }
+
+    for(uint16_t i = 0; i < RETICUL8_MAX_LEDC_CHANNELS; i++) {
+        if (this->ledc_channels[i].state == LEDC_NOT_IN_USE) {
+
+            this->ledc_channels[i].config.channel = (ledc_channel_t)i;
+            this->ledc_channels[i].config.duty = 0;
+            this->ledc_channels[i].config.gpio_num = pin;
+            this->ledc_channels[i].config.speed_mode = LEDC_HIGH_SPEED_MODE;
+            this->ledc_channels[i].config.timer_sel = LEDC_TIMER_0;
+
+            if (ledc_channel_config(&this->ledc_channels[i].config) == ESP_OK) {
+                this->ledc_channels[i].state = LEDC_IN_USE;
+                return true;
+            };
+        }
+    }
+
+    return false;
+
+}
+bool RETICUL8::set_ledc_duty(uint8_t pin, uint32_t duty) {
+
+    for(uint16_t i = 0; i < RETICUL8_MAX_LEDC_CHANNELS; i++) {
+        if (this->ledc_channels[i].config.gpio_num == pin) {
+
+            if (ledc_set_duty(LEDC_HIGH_SPEED_MODE, (ledc_channel_t)i, duty) != ESP_OK) {
+                return false;
+            }
+
+            if (ledc_update_duty(LEDC_HIGH_SPEED_MODE, (ledc_channel_t)i) != ESP_OK) {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+
+    return false;
+}
+bool RETICUL8::set_ledc_fade(uint8_t pin, uint32_t duty, uint32_t fade_ms) {
+    ledc_fade_func_install(0);
+
+    for(uint16_t i = 0; i < RETICUL8_MAX_LEDC_CHANNELS; i++) {
+        if (this->ledc_channels[i].config.gpio_num == pin) {
+
+            if (ledc_set_fade_with_time(LEDC_HIGH_SPEED_MODE, (ledc_channel_t)i, duty, fade_ms) != ESP_OK){
+                return false;
+            }
+
+            if (ledc_fade_start(LEDC_HIGH_SPEED_MODE, (ledc_channel_t)i, LEDC_FADE_NO_WAIT) != ESP_OK) {
+                return false;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+#endif
+
+
+#ifdef ESP32
+    bool RETICUL8::i2c_setup(uint8_t sda, uint8_t scl) {
+        if (is_i2c_setup) {
+            return true;
+        }
+        if (Wire.begin(sda, scl) == true) {
+            is_i2c_setup = true;
+            return true;
+        }
+        return false;
+    }
+
+#else
+
+    bool RETICUL8::i2c_setup() {
+        if (is_i2c_setup) {
+            return true;
+        }
+        Wire.begin();
+        is_i2c_setup = true;
+        return true;
+    }
+#endif
+
+bool RETICUL8::i2c_write(uint8_t device, uint8_t *data, uint8_t len) {
+
+    Wire.beginTransmission(device);
+
+    for(uint8_t i = 0; i < len; i++) {
+        Wire.write(data[i]);
+    }
+
+    if (Wire.endTransmission() == 0){
+        return true;
+    }
+    return false;
+}
+
+uint8_t RETICUL8::i2c_read(uint8_t device, uint8_t address, uint8_t len, uint8_t *buf) {
+
+    Wire.beginTransmission(device);
+    Wire.write(address);
+    Wire.endTransmission();
+
+    Wire.requestFrom(device, len);
+
+    if (Wire.available() == len) {
+        for (uint8_t i=0; i<len; i++) {
+            buf[i] = Wire.read();
+        }
+    } else {
+        return 0;
+    }
+
+    return len;
+
+}
 
 void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
 
@@ -195,18 +363,83 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
             }
             break;
 
+#ifdef ESP32
+        // ESP32 PWM support via "LEDC"
+
         case (RPC_pwm_config_tag):
+
+            if (setup_ledc_channel(request.call.pwm_config.pin)) {
+                reply.result = ResultType_RT_SUCCESS;
+            }
+
             break;
 
         case (RPC_pwm_duty_tag):
+
+            if(set_ledc_duty(request.call.pwm_duty.pin, request.call.pwm_duty.duty)) {
+                reply.result = ResultType_RT_SUCCESS;
+            }
             break;
 
         case (RPC_pwm_fade_tag):
+
+            if (set_ledc_fade(request.call.pwm_fade.pin, request.call.pwm_fade.duty, request.call.pwm_fade.fade_ms)) {
+                reply.result = ResultType_RT_SUCCESS;
+            }
+
             break;
+#endif
 
         case (RPC_ping_tag):
             reply.result = ResultType_RT_SUCCESS;
             break;
+
+        case (RPC_sysinfo_tag):
+            reply.result = ResultType_RT_SUCCESS;
+#ifdef ESP32
+            reply.value = ResultValue_SYS_TYPE_ESP32;
+#else
+            reply.value = ResultValue_SYS_TYPE_GENERIC;
+#endif
+
+        case (RPC_i2c_config_tag):
+
+#ifdef ESP32
+            if (request.call.i2c_config.has_pin_scl && request.call.i2c_config.has_pin_sda) {
+                if (i2c_setup(request.call.i2c_config.pin_sda, request.call.i2c_config.pin_scl)) {
+                    reply.result = ResultType_RT_SUCCESS;
+                }
+            }
+#else
+            if (i2c_setup()) {
+                reply.result = ResultType_RT_SUCCESS;
+            }
+#endif
+            break;
+
+        case (RPC_i2c_write_tag):
+
+            if (i2c_write(request.call.i2c_write.device, request.call.i2c_write.data.bytes, request.call.i2c_write.len)){
+                reply.result = ResultType_RT_SUCCESS;
+            }
+            break;
+
+
+        case (RPC_i2c_read_tag):
+            {
+                uint8_t i2c_buf[32];
+
+                uint8_t i2c_bytes_read = i2c_read(request.call.i2c_read.device, request.call.i2c_read.address, request.call.i2c_read.len, i2c_buf);
+
+                if (i2c_bytes_read == request.call.i2c_read.len) {
+                    reply.result = ResultType_RT_SUCCESS;
+                    reply.has_i2c_read_bytes = true;
+                    memcpy(reply.i2c_read_bytes.bytes, i2c_buf, i2c_bytes_read);
+                    reply.i2c_read_bytes.size = i2c_bytes_read;
+                }
+            }
+            break;
+
 
         default:
             reply.result = ResultType_RT_UNKNOWN;

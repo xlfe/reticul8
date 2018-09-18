@@ -95,8 +95,25 @@ message PWM_FADE {
 
 }
 
-message PING {
+message I2C_CONFIG {
+    optional uint32 pin_sda = 1;
+    optional uint32 pin_scl = 2;
 }
+
+message I2C_WRITE {
+    required uint32 device = 1;
+    required bytes data = 2 [(nanopb).max_size = 32];
+    required uint32 len = 3;
+}
+
+message I2C_READ {
+    required uint32 device = 1;
+    required uint32 address = 2;
+    required uint32 len = 3;
+}
+
+message PING {}
+message SYSINFO {}
 
 
 message RPC {
@@ -111,6 +128,11 @@ message RPC {
         PWM_FADE pwm_fade = 7;
 
         PING ping = 8;
+        SYSINFO sysinfo = 9;
+
+        I2C_CONFIG i2c_config = 10;
+        I2C_WRITE i2c_write = 11;
+        I2C_READ i2c_read = 12;
 
         OTA_UPDATE ota_update = 100;
     }
@@ -126,12 +148,15 @@ enum ResultType {
 enum ResultValue {
     PIN_HIGH = 1;
     PIN_LOW = 2;
+    SYS_TYPE_ESP32 = 3;
+    SYS_TYPE_GENERIC = 4;
 }
 
 message CALL_REPLY
 {
     required ResultType result = 1;
     optional ResultValue value = 2;
+    optional bytes i2c_read_bytes = 3 [(nanopb).max_size = 32];
     required uint32 msg_id = 200;
 
 }
