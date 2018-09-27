@@ -83,6 +83,8 @@ message PWM_CONFIG {
     required uint32 pin =1;
 }
 
+// Max duty is 8192
+
 message PWM_DUTY {
     required uint32 pin =1;
     required uint32 duty = 2;
@@ -112,8 +114,12 @@ message I2C_READ {
     required uint32 len = 3;
 }
 
-message PING {}
-message SYSINFO {}
+message PING {
+    required bool ping = 1;
+}
+message SYSINFO {
+    required bool sysinfo = 1;
+}
 
 message SCHEDULE {
     required uint32 run_count = 1;
