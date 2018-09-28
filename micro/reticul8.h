@@ -4,7 +4,9 @@
 //#define PJON_INCLUDE_ANY
 //#define PJON_INCLUDE_EN
 
-#define PJON_PACKET_MAX_LENGTH 246
+#include "reticul8.pb.h"
+
+#define PJON_PACKET_MAX_LENGTH (250-4)
 #define PJON_INCLUDE_PACKET_ID true
 #define PJON_INCLUDE_ASYNC_ACK true
 
@@ -15,7 +17,6 @@
 #include <pb.h>
 #include <pb_encode.h>
 #include <pb_decode.h>
-#include "reticul8.pb.h"
 
 #define RETICUL8_MAX_WATCHED_PINS 20
 
@@ -82,7 +83,7 @@ private:
     void check_for_events();
 
     struct WATCHED_PIN watched_pins[RETICUL8_MAX_WATCHED_PINS];
-    void notify_event(EVENT *event);
+    void notify_event(FROM_MICRO *m);
     void setup_watched_pin(WATCHED_PIN &p, uint8_t pin, uint16_t debounce_ms);
     bool watch_pin(uint8_t pin, uint16_t debounce_ms);
     bool unwatch_pin(uint8_t pin);

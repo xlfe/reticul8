@@ -30,61 +30,65 @@ void error_handler(uint8_t code, uint16_t data, void *custom_pointer) {
 
 
 void RETICUL8::begin(){
+    if ((PJON_PACKET_MAX_LENGTH - this->bus->packet_overhead()) < RPC_size) {
+        //don't start packet if the configuration might break...
+       return;
+    }
+
     bus->set_custom_pointer(this);
     bus->set_receiver(receiver_function);
     bus->set_error(error_handler);
     bus->set_crc_32(true);
     bus->begin();
+    bus->update();
 
-
-    EVENT event = EVENT_init_zero;
-    event.which_event = EVENT_startup_tag;
+    FROM_MICRO m = FROM_MICRO_init_zero;
+    m.which_msg = FROM_MICRO_startup_tag;
 
 #ifdef ESP32
     {
-        event.event.startup.has_reason = true;
-        event.event.startup.reason = StartupReason_SR_UNKNOWN;
+        m.msg.startup = STARTUP_REASON_SR_UNKNOWN;
 
         switch (rtc_get_reset_reason(0))
         {
-            case 1 : event.event.startup.reason  = StartupReason_ESP32_POWERON_RESET; break;
-            case 3 : event.event.startup.reason = StartupReason_ESP32_SW_RESET;break;
-            case 4 : event.event.startup.reason = StartupReason_ESP32_OWDT_RESET;break;
-            case 5 : event.event.startup.reason = StartupReason_ESP32_DEEPSLEEP_RESET;break;
-            case 6 : event.event.startup.reason = StartupReason_ESP32_SDIO_RESET;break;
-            case 7 : event.event.startup.reason = StartupReason_ESP32_TG0WDT_SYS_RESET;break;
-            case 8 : event.event.startup.reason = StartupReason_ESP32_TG1WDT_SYS_RESET;break;
-            case 9 : event.event.startup.reason = StartupReason_ESP32_RTCWDT_SYS_RESET;break;
-            case 10 : event.event.startup.reason = StartupReason_ESP32_INTRUSION_RESET;break;
-            case 11 : event.event.startup.reason = StartupReason_ESP32_TGWDT_CPU_RESET;break;
-            case 12 : event.event.startup.reason = StartupReason_ESP32_SW_CPU_RESET;break;
-            case 13 : event.event.startup.reason = StartupReason_ESP32_RTCWDT_CPU_RESET;break;
-            case 14 : event.event.startup.reason = StartupReason_ESP32_EXT_CPU_RESET;break;
-            case 15 : event.event.startup.reason = StartupReason_ESP32_RTCWDT_BROWN_OUT_RESET;break;
-            case 16 : event.event.startup.reason = StartupReason_ESP32_RTCWDT_RTC_RESET;break;
+            case 1 :  m.msg.startup = STARTUP_REASON_ESP32_POWERON_RESET; break;
+            case 3 :  m.msg.startup = STARTUP_REASON_ESP32_SW_RESET;break;
+            case 4 :  m.msg.startup = STARTUP_REASON_ESP32_OWDT_RESET;break;
+            case 5 :  m.msg.startup = STARTUP_REASON_ESP32_DEEPSLEEP_RESET;break;
+            case 6 :  m.msg.startup = STARTUP_REASON_ESP32_SDIO_RESET;break;
+            case 7 :  m.msg.startup = STARTUP_REASON_ESP32_TG0WDT_SYS_RESET;break;
+            case 8 :  m.msg.startup = STARTUP_REASON_ESP32_TG1WDT_SYS_RESET;break;
+            case 9 :  m.msg.startup = STARTUP_REASON_ESP32_RTCWDT_SYS_RESET;break;
+            case 10 : m.msg.startup = STARTUP_REASON_ESP32_INTRUSION_RESET;break;
+            case 11 : m.msg.startup = STARTUP_REASON_ESP32_TGWDT_CPU_RESET;break;
+            case 12 : m.msg.startup = STARTUP_REASON_ESP32_SW_CPU_RESET;break;
+            case 13 : m.msg.startup = STARTUP_REASON_ESP32_RTCWDT_CPU_RESET;break;
+            case 14 : m.msg.startup = STARTUP_REASON_ESP32_EXT_CPU_RESET;break;
+            case 15 : m.msg.startup = STARTUP_REASON_ESP32_RTCWDT_BROWN_OUT_RESET;break;
+            case 16 : m.msg.startup = STARTUP_REASON_ESP32_RTCWDT_RTC_RESET;break;
             case NO_MEAN: break;
         }
     }
 #endif
 
-    this->notify_event(&event);
+    this->notify_event(&m);
 
 }
 
 void RETICUL8::loop() {
     check_for_events();
     check_for_scheduled_commands();
-    bus->receive();
     bus->update();
     vTaskDelay(1);
+    bus->receive();
 }
 
-void RETICUL8::notify_event(EVENT *event) {
+void RETICUL8::notify_event(FROM_MICRO *m) {
 
-    uint8_t notify_buf[EVENT_size];
+    uint8_t notify_buf[FROM_MICRO_size];
 
     pb_ostream_t notify_stream = pb_ostream_from_buffer(notify_buf, sizeof(notify_buf));
-    bool status = pb_encode(&notify_stream, EVENT_fields, event);
+    bool status = pb_encode(&notify_stream, FROM_MICRO_fields, m);
 
     if (!status) {
         printf("Encoding failed: %s\n", PB_GET_ERROR(&notify_stream));
@@ -125,15 +129,12 @@ void RETICUL8::check_for_events() {
 
                     this->watched_pins[i].notified_value = reading;
 
-                    EVENT event = EVENT_init_zero;
-                    PIN_CHANGE pin_change = PIN_CHANGE_init_zero;
-                    pin_change.pin = this->watched_pins[i].pin;
-                    pin_change.value = reading == 0 ? PinValue_LOW : PinValue_HIGH;
+                    FROM_MICRO m = FROM_MICRO_init_zero;
+                    m.which_msg = FROM_MICRO_pin_change_tag;
+                    m.msg.pin_change.pin = this->watched_pins[i].pin;
+                    m.msg.pin_change.value = reading == 0 ? PIN_VALUE_PV_LOW : PIN_VALUE_PV_HIGH;
 
-                    event.which_event = EVENT_pin_change_tag;
-                    event.event.pin_change = pin_change;
-
-                    this->notify_event(&event);
+                    this->notify_event(&m);
 
                 }
             }
@@ -345,10 +346,6 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
 
     status = pb_decode(&in_stream, RPC_fields, &request);
 
-    if (!status) {
-        printf("Decoding failed: %s\n", PB_GET_ERROR(&in_stream));
-        return;
-    }
 
 
     if (request.has_schedule) {
@@ -357,155 +354,154 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
     }
 
 
-    uint8_t reply_buf[CALL_REPLY_size];
-    CALL_REPLY reply = CALL_REPLY_init_zero;
-    reply.msg_id = request.msg_id;
-    reply.result = ResultType_RT_ERROR;
+    uint8_t reply_buf[FROM_MICRO_size];
+    FROM_MICRO m = FROM_MICRO_init_zero;
+    m.which_msg = FROM_MICRO_result_tag;
+    m.msg.result.result = RESULT_TYPE_RT_ERROR;
 
+    if (!status) {
+        m.msg.result.result = RESULT_TYPE_RT_DECODING_FAILED;
+    } else {
+        m.msg.result.msg_id = request.msg_id;
 
+        switch (request.which_call) {
+            case (RPC_gpio_config_tag):
 
-    switch (request.which_call) {
-        case (RPC_gpio_config_tag):
-
-            switch (request.call.gpio_config.mode) {
-                case (PinMode_OUTPUT):
-                    pinMode(request.call.gpio_config.pin, OUTPUT);
-                    reply.result = ResultType_RT_SUCCESS;
-                    break;
-                case (PinMode_INPUT_PULLDOWN):
-                    pinMode(request.call.gpio_config.pin, INPUT_PULLDOWN);
-                    reply.result = ResultType_RT_SUCCESS;
-                    break;
-                case (PinMode_INPUT_PULLUP):
-                    pinMode(request.call.gpio_config.pin, INPUT_PULLUP);
-                    reply.result = ResultType_RT_SUCCESS;
-                    break;
-            }
-
-            break;
-
-        case (RPC_gpio_write_tag):
-
-            switch (request.call.gpio_write.value) {
-                case (PinValue_HIGH):
-                    digitalWrite(request.call.gpio_write.pin, HIGH);
-                    reply.result = ResultType_RT_SUCCESS;
-                    break;
-                case (PinValue_LOW):
-                    digitalWrite(request.call.gpio_write.pin, LOW);
-                    reply.result = ResultType_RT_SUCCESS;
-                    break;
-            }
-
-            break;
-
-        case (RPC_gpio_read_tag):
-
-            switch (digitalRead(request.call.gpio_read.pin)) {
-                case (HIGH):
-                    reply.result = ResultType_RT_SUCCESS;
-                    reply.value = ResultValue_PIN_HIGH;
-                    break;
-                case (LOW):
-                    reply.result = ResultType_RT_SUCCESS;
-                    reply.value = ResultValue_PIN_LOW;
-                    break;
-            }
-            break;
-
-        case (RPC_gpio_monitor_tag):
-
-            if (request.call.gpio_monitor.debounce_ms < 0xFFFF) {
-                if (this->watch_pin(request.call.gpio_monitor.pin, request.call.gpio_monitor.debounce_ms)) {
-                    reply.result = ResultType_RT_SUCCESS;
+                switch (request.call.gpio_config.mode) {
+                    case (PIN_MODE_PM_OUTPUT):
+                        pinMode(request.call.gpio_config.pin, OUTPUT);
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        break;
+                    case (PIN_MODE_PM_INPUT_PULLDOWN):
+                        pinMode(request.call.gpio_config.pin, INPUT_PULLDOWN);
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        break;
+                    case (PIN_MODE_PM_INPUT_PULLUP):
+                        pinMode(request.call.gpio_config.pin, INPUT_PULLUP);
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        break;
                 }
-            }
-            break;
 
-#ifdef ESP32
-        // ESP32 PWM support via "LEDC"
+                break;
 
-        case (RPC_pwm_config_tag):
+            case (RPC_gpio_write_tag):
 
-            if (setup_ledc_channel(request.call.pwm_config.pin)) {
-                reply.result = ResultType_RT_SUCCESS;
-            }
-
-            break;
-
-        case (RPC_pwm_duty_tag):
-
-            if(set_ledc_duty(request.call.pwm_duty.pin, request.call.pwm_duty.duty)) {
-                reply.result = ResultType_RT_SUCCESS;
-            }
-            break;
-
-        case (RPC_pwm_fade_tag):
-
-            if (set_ledc_fade(request.call.pwm_fade.pin, request.call.pwm_fade.duty, request.call.pwm_fade.fade_ms)) {
-                reply.result = ResultType_RT_SUCCESS;
-            }
-
-            break;
-#endif
-
-        case (RPC_ping_tag):
-            reply.result = ResultType_RT_SUCCESS;
-            break;
-
-        case (RPC_sysinfo_tag):
-            reply.result = ResultType_RT_SUCCESS;
-#ifdef ESP32
-            reply.value = ResultValue_SYS_TYPE_ESP32;
-#else
-            reply.value = ResultValue_SYS_TYPE_GENERIC;
-#endif
-
-        case (RPC_i2c_config_tag):
-
-#ifdef ESP32
-            if (request.call.i2c_config.has_pin_scl && request.call.i2c_config.has_pin_sda) {
-                if (i2c_setup(request.call.i2c_config.pin_sda, request.call.i2c_config.pin_scl)) {
-                    reply.result = ResultType_RT_SUCCESS;
+                switch (request.call.gpio_write.value) {
+                    case (PIN_VALUE_PV_HIGH):
+                        digitalWrite(request.call.gpio_write.pin, HIGH);
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        break;
+                    case (PIN_VALUE_PV_LOW):
+                        digitalWrite(request.call.gpio_write.pin, LOW);
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        break;
                 }
-            }
-#else
-            if (i2c_setup()) {
-                reply.result = ResultType_RT_SUCCESS;
-            }
-#endif
-            break;
 
-        case (RPC_i2c_write_tag):
+                break;
 
-            if (i2c_write(request.call.i2c_write.device, request.call.i2c_write.data.bytes, request.call.i2c_write.len)){
-                reply.result = ResultType_RT_SUCCESS;
-            }
-            break;
+            case (RPC_gpio_read_tag):
 
-
-        case (RPC_i2c_read_tag):
-            {
-                uint8_t i2c_buf[32];
-
-                uint8_t i2c_bytes_read = i2c_read(request.call.i2c_read.device, request.call.i2c_read.address, request.call.i2c_read.len, i2c_buf);
-
-                if (i2c_bytes_read == request.call.i2c_read.len) {
-                    reply.result = ResultType_RT_SUCCESS;
-                    reply.has_i2c_read_bytes = true;
-                    memcpy(reply.i2c_read_bytes.bytes, i2c_buf, i2c_bytes_read);
-                    reply.i2c_read_bytes.size = i2c_bytes_read;
+                switch (digitalRead(request.call.gpio_read.pin)) {
+                    case (HIGH):
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        m.msg.result.has_pin_value = true;
+                        m.msg.result.pin_value = PIN_VALUE_PV_HIGH;
+                        break;
+                    case (LOW):
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        m.msg.result.has_pin_value = true;
+                        m.msg.result.pin_value = PIN_VALUE_PV_LOW;
+                        break;
                 }
-            }
-            break;
+                break;
 
-        default:
-            reply.result = ResultType_RT_UNKNOWN;
-            break;
+            case (RPC_gpio_monitor_tag):
+
+                if (request.call.gpio_monitor.debounce_ms < 0xFFFF) {
+                    if (this->watch_pin(request.call.gpio_monitor.pin, request.call.gpio_monitor.debounce_ms)) {
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    }
+                }
+                break;
+
+    #ifdef ESP32
+            // ESP32 PWM support via "LEDC"
+
+            case (RPC_pwm_config_tag):
+
+                if (setup_ledc_channel(request.call.pwm_config.pin)) {
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                }
+
+                break;
+
+            case (RPC_pwm_duty_tag):
+
+                if(set_ledc_duty(request.call.pwm_duty.pin, request.call.pwm_duty.duty)) {
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                }
+                break;
+
+            case (RPC_pwm_fade_tag):
+
+                if (set_ledc_fade(request.call.pwm_fade.pin, request.call.pwm_fade.duty, request.call.pwm_fade.fade_ms)) {
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                }
+
+                break;
+    #endif
+
+            case (RPC_ping_tag):
+                m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                break;
+
+            case (RPC_i2c_config_tag):
+
+    #ifdef ESP32
+                if (request.call.i2c_config.has_pin_scl && request.call.i2c_config.has_pin_sda) {
+                    if (i2c_setup(request.call.i2c_config.pin_sda, request.call.i2c_config.pin_scl)) {
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    }
+                }
+    #else
+                if (i2c_setup()) {
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    }
+    #endif
+                break;
+
+            case (RPC_i2c_write_tag):
+
+                if (i2c_write(request.call.i2c_write.device, request.call.i2c_write.data.bytes, request.call.i2c_write.len)){
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                }
+                break;
+
+
+            case (RPC_i2c_read_tag):
+                {
+                    uint8_t i2c_buf[32];
+
+                    uint8_t i2c_bytes_read = i2c_read(request.call.i2c_read.device, request.call.i2c_read.address, request.call.i2c_read.len, i2c_buf);
+
+                    if (i2c_bytes_read == request.call.i2c_read.len) {
+                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        m.has_data = true;
+                        memcpy(m.data.bytes, i2c_buf, i2c_bytes_read);
+                        m.has_data_len = true;
+                        m.data_len = i2c_bytes_read;
+                    }
+                }
+                break;
+
+            default:
+                m.msg.result.result = RESULT_TYPE_RT_UNKNOWN;
+                break;
+        }
     }
 
     pb_ostream_t reply_stream = pb_ostream_from_buffer(reply_buf, sizeof(reply_buf));
-    status = pb_encode(&reply_stream, CALL_REPLY_fields, &reply);
+    status = pb_encode(&reply_stream, FROM_MICRO_fields, &m);
 
     if (!status) {
         printf("Encoding failed: %s\n", PB_GET_ERROR(&reply_stream));

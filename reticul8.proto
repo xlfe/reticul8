@@ -44,15 +44,15 @@ CMD_ERROR '-'
 
 
 
-enum PinMode {
-    INPUT_PULLUP = 1;
-    INPUT_PULLDOWN = 2;
-    OUTPUT = 3;
+enum PIN_MODE {
+    PM_INPUT_PULLUP = 1;
+    PM_INPUT_PULLDOWN = 2;
+    PM_OUTPUT = 3;
 }
 
 message GPIO_CONFIG {
     required uint32 pin = 1;
-    required PinMode mode = 2;
+    required PIN_MODE mode = 2;
 };
 
 message GPIO_MONITOR {
@@ -60,23 +60,22 @@ message GPIO_MONITOR {
     required uint32 debounce_ms = 2;
 }
 
-enum PinValue {
-    HIGH =1;
-    LOW = 2;
+enum PIN_VALUE {
+    PV_HIGH =1;
+    PV_LOW = 2;
 }
 
 message GPIO_WRITE {
     required uint32 pin = 1;
-    required PinValue value  = 2;
+    required PIN_VALUE value  = 2;
 };
 
 message GPIO_READ {
     required uint32 pin = 1;
 }
 
-
 message OTA_UPDATE {
-    required string uri =1 [(nanopb).max_size = 200];
+    required bytes uri =1 [(nanopb).max_size = 192];
 }
 
 message PWM_CONFIG {
@@ -152,34 +151,19 @@ message RPC {
     optional SCHEDULE schedule = 201;
 }
 
-enum ResultType {
+enum RESULT_TYPE {
     RT_UNKNOWN = 1;
     RT_SUCCESS = 2;
     RT_ERROR = 3;
-}
-
-enum ResultValue {
-    PIN_HIGH = 1;
-    PIN_LOW = 2;
-    SYS_TYPE_ESP32 = 3;
-    SYS_TYPE_GENERIC = 4;
-}
-
-message CALL_REPLY
-{
-    required ResultType result = 1;
-    optional ResultValue value = 2;
-    optional bytes i2c_read_bytes = 3 [(nanopb).max_size = 32];
-    required uint32 msg_id = 200;
-
+    RT_DECODING_FAILED = 4;
 }
 
 message PIN_CHANGE {
     required uint32 pin =1;
-    required PinValue value =2;
+    required PIN_VALUE value =2;
 }
 
-enum StartupReason {
+enum STARTUP_REASON {
     SR_UNKNOWN = 1;
     ESP32_POWERON_RESET = 2;
     ESP32_SW_RESET = 3;
@@ -198,14 +182,20 @@ enum StartupReason {
     ESP32_RTCWDT_RTC_RESET = 16;
 }
 
-message STARTUP {
-    optional StartupReason reason =1;
+message RPC_RESULT {
+    required RESULT_TYPE result = 1;
+    optional PIN_VALUE pin_value = 2;
+    required uint32 msg_id = 200;
 }
 
-message EVENT
-{
-    oneof event {
-        PIN_CHANGE pin_change = 1;
-        STARTUP startup = 2;
+message FROM_MICRO {
+
+    oneof msg {
+        RPC_RESULT result = 1;
+        PIN_CHANGE pin_change = 2;
+        STARTUP_REASON startup = 3;
     }
+    optional bytes data = 200 [(nanopb).max_size = 128];
+    optional uint32 data_len = 201;
+
 }
