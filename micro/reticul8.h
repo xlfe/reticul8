@@ -45,12 +45,12 @@ struct LEDC_CHANNEL {
 
 struct SCHEDULED_COMMAND {
     uint8_t state;
-    uint32_t run_count;
-    uint32_t run_every_ms;
+    uint32_t msg_id;
+    int32_t count;
+    uint32_t every_ms;
     uint32_t next_execution;
 
-    uint8_t data[PJON_PACKET_MAX_LENGTH];
-    uint8_t data_len;
+    RPC command;
 };
 
 
@@ -82,6 +82,8 @@ private:
     uint8_t master_id;
     void check_for_events();
 
+    void run_command(RPC request);
+
     struct WATCHED_PIN watched_pins[RETICUL8_MAX_WATCHED_PINS];
     void notify_event(FROM_MICRO *m);
     void setup_watched_pin(WATCHED_PIN &p, uint8_t pin, uint16_t debounce_ms);
@@ -109,7 +111,7 @@ private:
 
     struct SCHEDULED_COMMAND scheduled_commands[RETICUL8_MAX_SCHEDULED_COMMANDS];
     void check_for_scheduled_commands();
-    bool add_scheduled_commands(uint8_t *data, uint8_t data_len, uint32_t run_count, uint32_t run_every_ms, uint32_t next_execution);
+    bool add_scheduled_command(RPC *command);
 
 
 };

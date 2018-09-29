@@ -40,7 +40,6 @@ void RETICUL8::begin(){
     bus->set_error(error_handler);
     bus->set_crc_32(true);
     bus->begin();
-    bus->update();
 
     FROM_MICRO m = FROM_MICRO_init_zero;
     m.which_msg = FROM_MICRO_startup_tag;
@@ -90,9 +89,7 @@ void RETICUL8::notify_event(FROM_MICRO *m) {
     pb_ostream_t notify_stream = pb_ostream_from_buffer(notify_buf, sizeof(notify_buf));
     bool status = pb_encode(&notify_stream, FROM_MICRO_fields, m);
 
-    if (!status) {
-        printf("Encoding failed: %s\n", PB_GET_ERROR(&notify_stream));
-    } else {
+    if (status) {
         this->bus->send(this->master_id, (char*)notify_buf, notify_stream.bytes_written);
     }
 }
@@ -102,12 +99,40 @@ void RETICUL8::check_for_scheduled_commands() {
     for (uint16_t i = 0; i < RETICUL8_MAX_SCHEDULED_COMMANDS; i++) {
         if (this->scheduled_commands[i].state == SCHEDULE_COMMAND_IN_USE) {
 
-            //Check params
+            if (this->scheduled_commands[i].next_execution > millis()){
+                this->run_command(this->scheduled_commands[i].command);
+                if (this->scheduled_commands[i].count != -1) {
+                    this->scheduled_commands[i].count --;
+                }
+
+                if (this->scheduled_commands[i].count == 0){
+                    memset(&this->scheduled_commands[i], 0, sizeof(SCHEDULED_COMMAND));
+                } else {
+                    this->scheduled_commands[i].next_execution += this->scheduled_commands[i].every_ms;
+                }
+            }
         }
     }
 }
 
-bool RETICUL8::add_scheduled_commands(uint8_t *data, uint8_t data_len, uint32_t run_count, uint32_t run_every_ms, uint32_t next_execution) {
+bool RETICUL8::add_scheduled_command(RPC *command) {
+
+    for (uint16_t i = 0; i < RETICUL8_MAX_SCHEDULED_COMMANDS; i++) {
+        if (this->scheduled_commands[i].state == SCHEDULE_COMMAND_NOT_IN_USE) {
+
+            this->scheduled_commands[i].state = SCHEDULE_COMMAND_IN_USE;
+
+            this->scheduled_commands[i].msg_id = command->msg_id;
+
+            this->scheduled_commands[i].next_execution = millis() + command->schedule.after_ms;
+            this->scheduled_commands[i].count = command->schedule.count;
+            this->scheduled_commands[i].every_ms = command->schedule.every_ms;
+
+            memcpy(&this->scheduled_commands[i].command, command, sizeof(SCHEDULED_COMMAND));
+
+            return true;
+        }
+    }
     return false;
 }
 
@@ -346,168 +371,169 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
 
     status = pb_decode(&in_stream, RPC_fields, &request);
 
-
-
-    if (request.has_schedule) {
-
+    if (!status) {
         return;
     }
 
+    if (request.has_schedule) {
 
-    uint8_t reply_buf[FROM_MICRO_size];
+        FROM_MICRO m = FROM_MICRO_init_zero;
+        m.which_msg = FROM_MICRO_result_tag;
+        m.msg.result.msg_id = request.msg_id;
+        m.msg.result.result = RESULT_TYPE_RT_ERROR;
+
+        if (this->add_scheduled_command(&request)) {
+            m.msg.result.result = RESULT_TYPE_RT_SCHEDULED;
+        }
+
+        this->notify_event(&m);
+
+    } else {
+        this->run_command(request);
+    }
+}
+
+void RETICUL8::run_command(RPC request) {
+
     FROM_MICRO m = FROM_MICRO_init_zero;
     m.which_msg = FROM_MICRO_result_tag;
     m.msg.result.result = RESULT_TYPE_RT_ERROR;
+    m.msg.result.msg_id = request.msg_id;
 
-    if (!status) {
-        m.msg.result.result = RESULT_TYPE_RT_DECODING_FAILED;
-    } else {
-        m.msg.result.msg_id = request.msg_id;
+    switch (request.which_call) {
+        case (RPC_gpio_config_tag):
 
-        switch (request.which_call) {
-            case (RPC_gpio_config_tag):
+            switch (request.call.gpio_config.mode) {
+                case (PIN_MODE_PM_OUTPUT):
+                    pinMode(request.call.gpio_config.pin, OUTPUT);
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    break;
+                case (PIN_MODE_PM_INPUT_PULLDOWN):
+                    pinMode(request.call.gpio_config.pin, INPUT_PULLDOWN);
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    break;
+                case (PIN_MODE_PM_INPUT_PULLUP):
+                    pinMode(request.call.gpio_config.pin, INPUT_PULLUP);
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    break;
+            }
 
-                switch (request.call.gpio_config.mode) {
-                    case (PIN_MODE_PM_OUTPUT):
-                        pinMode(request.call.gpio_config.pin, OUTPUT);
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        break;
-                    case (PIN_MODE_PM_INPUT_PULLDOWN):
-                        pinMode(request.call.gpio_config.pin, INPUT_PULLDOWN);
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        break;
-                    case (PIN_MODE_PM_INPUT_PULLUP):
-                        pinMode(request.call.gpio_config.pin, INPUT_PULLUP);
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        break;
-                }
+            break;
 
-                break;
+        case (RPC_gpio_write_tag):
 
-            case (RPC_gpio_write_tag):
+            switch (request.call.gpio_write.value) {
+                case (PIN_VALUE_PV_HIGH):
+                    digitalWrite(request.call.gpio_write.pin, HIGH);
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    break;
+                case (PIN_VALUE_PV_LOW):
+                    digitalWrite(request.call.gpio_write.pin, LOW);
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    break;
+            }
 
-                switch (request.call.gpio_write.value) {
-                    case (PIN_VALUE_PV_HIGH):
-                        digitalWrite(request.call.gpio_write.pin, HIGH);
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        break;
-                    case (PIN_VALUE_PV_LOW):
-                        digitalWrite(request.call.gpio_write.pin, LOW);
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        break;
-                }
+            break;
 
-                break;
+        case (RPC_gpio_read_tag):
 
-            case (RPC_gpio_read_tag):
+            switch (digitalRead(request.call.gpio_read.pin)) {
+                case (HIGH):
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    m.msg.result.has_pin_value = true;
+                    m.msg.result.pin_value = PIN_VALUE_PV_HIGH;
+                    break;
+                case (LOW):
+                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    m.msg.result.has_pin_value = true;
+                    m.msg.result.pin_value = PIN_VALUE_PV_LOW;
+                    break;
+            }
+            break;
 
-                switch (digitalRead(request.call.gpio_read.pin)) {
-                    case (HIGH):
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        m.msg.result.has_pin_value = true;
-                        m.msg.result.pin_value = PIN_VALUE_PV_HIGH;
-                        break;
-                    case (LOW):
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        m.msg.result.has_pin_value = true;
-                        m.msg.result.pin_value = PIN_VALUE_PV_LOW;
-                        break;
-                }
-                break;
+        case (RPC_gpio_monitor_tag):
 
-            case (RPC_gpio_monitor_tag):
-
-                if (request.call.gpio_monitor.debounce_ms < 0xFFFF) {
-                    if (this->watch_pin(request.call.gpio_monitor.pin, request.call.gpio_monitor.debounce_ms)) {
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                    }
-                }
-                break;
-
-    #ifdef ESP32
-            // ESP32 PWM support via "LEDC"
-
-            case (RPC_pwm_config_tag):
-
-                if (setup_ledc_channel(request.call.pwm_config.pin)) {
+            if (request.call.gpio_monitor.debounce_ms < 0xFFFF) {
+                if (this->watch_pin(request.call.gpio_monitor.pin, request.call.gpio_monitor.debounce_ms)) {
                     m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
                 }
+            }
+            break;
 
-                break;
+#ifdef ESP32
+        // ESP32 PWM support via "LEDC"
 
-            case (RPC_pwm_duty_tag):
+        case (RPC_pwm_config_tag):
 
-                if(set_ledc_duty(request.call.pwm_duty.pin, request.call.pwm_duty.duty)) {
-                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                }
-                break;
-
-            case (RPC_pwm_fade_tag):
-
-                if (set_ledc_fade(request.call.pwm_fade.pin, request.call.pwm_fade.duty, request.call.pwm_fade.fade_ms)) {
-                    m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                }
-
-                break;
-    #endif
-
-            case (RPC_ping_tag):
+            if (setup_ledc_channel(request.call.pwm_config.pin)) {
                 m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                break;
+            }
 
-            case (RPC_i2c_config_tag):
+            break;
 
-    #ifdef ESP32
-                if (request.call.i2c_config.has_pin_scl && request.call.i2c_config.has_pin_sda) {
-                    if (i2c_setup(request.call.i2c_config.pin_sda, request.call.i2c_config.pin_scl)) {
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                    }
-                }
-    #else
-                if (i2c_setup()) {
+        case (RPC_pwm_duty_tag):
+
+            if(set_ledc_duty(request.call.pwm_duty.pin, request.call.pwm_duty.duty)) {
+                m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+            }
+            break;
+
+        case (RPC_pwm_fade_tag):
+
+            if (set_ledc_fade(request.call.pwm_fade.pin, request.call.pwm_fade.duty, request.call.pwm_fade.fade_ms)) {
+                m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+            }
+
+            break;
+#endif
+
+        case (RPC_ping_tag):
+            m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+            break;
+
+        case (RPC_i2c_config_tag):
+
+#ifdef ESP32
+            if (request.call.i2c_config.has_pin_scl && request.call.i2c_config.has_pin_sda) {
+                if (i2c_setup(request.call.i2c_config.pin_sda, request.call.i2c_config.pin_scl)) {
                     m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                    }
-    #endif
-                break;
+                }
+            }
+#else
+            if (i2c_setup()) {
+                m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                }
+#endif
+            break;
 
-            case (RPC_i2c_write_tag):
+        case (RPC_i2c_write_tag):
 
-                if (i2c_write(request.call.i2c_write.device, request.call.i2c_write.data.bytes, request.call.i2c_write.len)){
+            if (i2c_write(request.call.i2c_write.device, request.data.bytes, request.data.size)){
+                m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+            }
+            break;
+
+        case (RPC_i2c_read_tag):
+            {
+                uint8_t i2c_buf[32];
+
+                uint8_t i2c_bytes_read = i2c_read(request.call.i2c_read.device, request.call.i2c_read.address, request.call.i2c_read.len, i2c_buf);
+
+                if (i2c_bytes_read == request.call.i2c_read.len) {
                     m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    m.has_data = true;
+                    memcpy(m.data.bytes, i2c_buf, i2c_bytes_read);
+                    m.data.size = i2c_bytes_read;
                 }
-                break;
+            }
+            break;
 
-
-            case (RPC_i2c_read_tag):
-                {
-                    uint8_t i2c_buf[32];
-
-                    uint8_t i2c_bytes_read = i2c_read(request.call.i2c_read.device, request.call.i2c_read.address, request.call.i2c_read.len, i2c_buf);
-
-                    if (i2c_bytes_read == request.call.i2c_read.len) {
-                        m.msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        m.has_data = true;
-                        memcpy(m.data.bytes, i2c_buf, i2c_bytes_read);
-                        m.has_data_len = true;
-                        m.data_len = i2c_bytes_read;
-                    }
-                }
-                break;
-
-            default:
-                m.msg.result.result = RESULT_TYPE_RT_UNKNOWN;
-                break;
-        }
+        default:
+            m.msg.result.result = RESULT_TYPE_RT_UNKNOWN;
+            break;
     }
 
-    pb_ostream_t reply_stream = pb_ostream_from_buffer(reply_buf, sizeof(reply_buf));
-    status = pb_encode(&reply_stream, FROM_MICRO_fields, &m);
-
-    if (!status) {
-        printf("Encoding failed: %s\n", PB_GET_ERROR(&reply_stream));
-    } else {
-        this->bus->reply((char*)reply_buf, reply_stream.bytes_written);
-    }
+    this->notify_event(&m);
 
 }
 

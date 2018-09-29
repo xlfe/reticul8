@@ -23,17 +23,35 @@ class ThroughSerial(pjon_cython.ThroughSerialAsync):
         self.waiting_ack_packets = {}
         self.startup = None
         self.msg_id = 0
+        self.recv_q = asyncio.Queue()
+        self.send_q = asyncio.Queue()
 
     def receive(self, data, length, packet_info):
-        packet = r8.FROM_MICRO()
-        try:
-            packet.ParseFromString(data)
-            if packet.IsInitialized():
-                self.handle_packet(packet)
-            else:
-                logging.warning('Packet not Initialized: {}'.format(data))
-        except (DecodeError):
-            logging.warning('Packet not decoded: {}'.format(data))
+        self.recv_q.put_nowait((data, packet_info))
+
+    async def send_queue(self):
+        while True:
+            await asyncio.sleep(0.05)
+            i, msg_id, packet = await self.send_q.get()
+            self.waiting_ack_packets[msg_id] = datetime.datetime.now()
+            self.send(i, packet)
+            self.send_q.task_done()
+
+    async def recv_queue(self):
+        while True:
+            await asyncio.sleep(0.05)
+            data, packet_info = await self.recv_q.get()
+            packet = r8.FROM_MICRO()
+            try:
+                packet.ParseFromString(data)
+                if packet.IsInitialized():
+                    self.handle_packet(packet)
+                else:
+                    logging.warning('Packet not Initialized: {}'.format(data))
+            except (DecodeError):
+                logging.warning('Packet not decoded: {}'.format(data))
+
+            self.recv_q.task_done()
 
     def handle_packet(self, packet):
 
@@ -42,31 +60,67 @@ class ThroughSerial(pjon_cython.ThroughSerialAsync):
             if self.startup is None:
                 self.startup = datetime.datetime.now()
                 time.sleep(1)
-                self.cmd_ping()
-                self.cmd_ping()
+                self.setup_led()
+                self.cmd_schedule()
+                # self.cmd_ping()
+                # self.cmd_ping()
         elif packet.WhichOneof('msg') == 'result':
             packet = packet.result
             try:
                 sent = self.waiting_ack_packets.pop(packet.msg_id)
-                self.cmd_ping()
-                logging.info('{} - {:,}  ({})'.format(
-                    packet.msg_id,
-                    (datetime.datetime.now()  - sent).microseconds,
-                    (self.msg_id/(1.0*(datetime.datetime.now() - self.startup).total_seconds()))))
             except KeyError:
-                logging.info('.')
+                sent = datetime.datetime.now()
+
+            self.cmd_ping()
+            logging.info('{:,}  ({:.2f}) {}'.format(
+                (datetime.datetime.now()  - sent).microseconds,
+                (self.msg_id/(1.0*(datetime.datetime.now() - self.startup).total_seconds())),
+                str(packet).replace('\n',' ')
+                ))
+        else:
+            logging.warning(packet)
 
     def sendp(self, packet):
-        packet.msg_id = self.msg_id + 0
-        self.waiting_ack_packets[packet.msg_id] = datetime.datetime.now()
-        self.send(11, packet.SerializeToString())
+        packet.msg_id = self.msg_id
         self.msg_id += 1
+        self.send_q.put_nowait((11, packet.msg_id, packet.SerializeToString()))
+        # self.send(11, packet.SerializeToString())
 
     def cmd_ping(self):
         rpc = r8.RPC()
         rpc.ping.ping = True
         # rpc.ota_update.uri = b'F'*192
         self.sendp(rpc)
+
+    def setup_led(self):
+        led = r8.RPC()
+        led.gpio_config.pin = 22
+        led.gpio_config.mode = r8.PM_OUTPUT
+        self.sendp(led)
+
+        # led = r8.RPC()
+        # led.gpio_write.pin = 22
+        # led.gpio_write.mode = r8.PV_LOW
+        # self.sendp(led)
+
+
+    def cmd_schedule(self):
+        s1 = r8.RPC()
+        s1.schedule.count = 1
+        s1.schedule.after_ms = 50000
+        s1.schedule.every_ms = 0
+        s1.gpio_write.pin = 22
+        s1.gpio_write.value = r8.PV_LOW
+        self.sendp(s1)
+
+        # s2 = r8.RPC()
+        # s2.schedule.count = -1
+        # s2.schedule.after_ms = 2000
+        # s2.schedule.every_ms = 500
+        # s2.gpio_write.pin = 22
+        # s2.gpio_write.value = r8.PV_HIGH
+        # self.sendp(s2)
+
 
     def print_waiting(self):
         last =None
@@ -77,14 +131,16 @@ class ThroughSerial(pjon_cython.ThroughSerialAsync):
 
 
 
-ts = ThroughSerial(10, b"/dev/tty.wchusbserial1410", 115200*2)
 
-def coro():
+async def coro():
+    ts = ThroughSerial(10, b"/dev/tty.wchusbserial1410", 115200*2)
 
+    asyncio.run_coroutine_threadsafe(ts.send_queue(), loop=asyncio.get_event_loop())
+    asyncio.run_coroutine_threadsafe(ts.recv_queue(), loop=asyncio.get_event_loop())
     while True:
         try:
             ts.loop()
-            time.sleep(0.0005)
+            await asyncio.sleep(0.0001)
         except (SystemError, pjon_cython.PJON_Connection_Lost):
             # logging.warning('ConnectionLost with {} packets {}'.format(ts.get_packets_count(), len(ts.waiting_ack_packets)))
             # ts.print_waiting()
@@ -92,7 +148,7 @@ def coro():
             # ts.cmd_ping()
 
 
-coro()
+asyncio.run(coro(), debug=True)
 
 
 
