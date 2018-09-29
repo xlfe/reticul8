@@ -1,10 +1,10 @@
 
 #pragma once
-
 //#define PJON_INCLUDE_ANY
 //#define PJON_INCLUDE_EN
 
 #include "reticul8.pb.h"
+
 
 #define PJON_PACKET_MAX_LENGTH (250-4)
 #define PJON_INCLUDE_PACKET_ID true
@@ -45,9 +45,6 @@ struct LEDC_CHANNEL {
 
 struct SCHEDULED_COMMAND {
     uint8_t state;
-    uint32_t msg_id;
-    int32_t count;
-    uint32_t every_ms;
     uint32_t next_execution;
 
     RPC command;
@@ -82,7 +79,7 @@ private:
     uint8_t master_id;
     void check_for_events();
 
-    void run_command(RPC request);
+    void run_command(RPC *request, FROM_MICRO *reply);
 
     struct WATCHED_PIN watched_pins[RETICUL8_MAX_WATCHED_PINS];
     void notify_event(FROM_MICRO *m);
@@ -111,7 +108,7 @@ private:
 
     struct SCHEDULED_COMMAND scheduled_commands[RETICUL8_MAX_SCHEDULED_COMMANDS];
     void check_for_scheduled_commands();
-    bool add_scheduled_command(RPC *command);
+    bool add_scheduled_command(uint8_t *payload, uint16_t length);
 
 
 };

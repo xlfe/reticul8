@@ -161,8 +161,6 @@ enum RESULT_TYPE {
     RT_UNKNOWN = 1;
     RT_SUCCESS = 2;
     RT_ERROR = 3;
-    RT_DECODING_FAILED = 4;
-    RT_SCHEDULED = 5;
 }
 
 message PIN_CHANGE {
@@ -202,5 +200,10 @@ message FROM_MICRO {
         PIN_CHANGE pin_change = 2;
         STARTUP_REASON startup = 3;
     }
-    optional bytes data = 200 [(nanopb).max_size = 64];
+
+    oneof data {
+        bytes raw = 200 [(nanopb).max_size = 64];
+        int32 schedules_remaining = 201;
+
+    }
 }
