@@ -76,6 +76,7 @@ message GPIO_READ {
 
 message OTA_UPDATE {
     required uint32 chunk = 1;
+    required bytes data = 2 [(nanopb).max_size=192];
 }
 
 message PWM_CONFIG {
@@ -103,6 +104,7 @@ message I2C_CONFIG {
 message I2C_WRITE {
     required uint32 device = 1 [(nanopb).int_size = IS_8];
     required uint32 len = 3 [(nanopb).int_size = IS_8];
+    required bytes data = 4 [(nanopb).max_size=32];
 }
 
 message I2C_READ {
@@ -121,13 +123,14 @@ message SYSINFO {
 message SCHEDULE {
     required int32 count = 1;
     required uint32 every_ms = 2;
-    optional uint32 after_ms = 3;
+    required uint32 after_ms = 3;
 }
 
 // Allow a nested command to run using the optional data
 message RUN_NESTED {
     required bytes cmd_ptr = 1 [(nanopb).max_size = 8];
     required bytes cmd_len = 2 [(nanopb).max_size = 8];
+    required bytes data = 3 [(nanopb).max_size=172];
 }
 
 message RPC {
@@ -154,7 +157,7 @@ message RPC {
 
     required uint32 msg_id = 200;
     optional SCHEDULE schedule = 201;
-    optional bytes data = 202 [(nanopb).max_size = 128];
+//    optional bytes data = 202 [(nanopb).max_size = 128];
 }
 
 enum RESULT_TYPE {

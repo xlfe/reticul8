@@ -31,7 +31,7 @@ void error_handler(uint8_t code, uint16_t data, void *custom_pointer) {
 
 void RETICUL8::begin(){
     if ((PJON_PACKET_MAX_LENGTH - this->bus->packet_overhead()) < RPC_size) {
-        //don't start packet if the configuration might break...
+//        don't start packet if the configuration might break...
        return;
     }
 
@@ -514,7 +514,7 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
 
         case (RPC_i2c_write_tag):
 
-            if (i2c_write(request->call.i2c_write.device, request->data.bytes, request->data.size)){
+            if (i2c_write(request->call.i2c_write.device, request->call.i2c_write.data.bytes, request->call.i2c_write.data.size)){
                 m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
             }
             break;
