@@ -61,8 +61,8 @@ message GPIO_MONITOR {
 }
 
 enum PIN_VALUE {
-    PV_HIGH =1;
-    PV_LOW = 2;
+    PV_LOW  = 0;
+    PV_HIGH = 1;
 }
 
 message GPIO_WRITE {
