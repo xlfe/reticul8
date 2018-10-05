@@ -1,6 +1,20 @@
-# reticul8 - Python micro interop
+## reticul8
 
-Pins
+**What do you get if you combine Python and and MCUs?**
+
+reticul8 allows you to use Python to remotely control a compatible microcontroller 
+such as an Arduino or ESP32 using Python. 
+
+
+Supports the following
+
+#### GPIO 
+
+* pinMode()
+
+PWM (ESP32 only)
+I2C
+OTA Update (ESP32 only)
 
 DIGITAL INPUT
 DIGITAL OUTPUT

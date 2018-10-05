@@ -105,3 +105,4 @@ venv.bak/
 
 micro/*.pb.*
 python/*_pb2.py
+.idea/

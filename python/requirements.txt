@@ -1,0 +1,10 @@
+gpiozero
+pigpio
+pjon-cython
+protobuf
+pyserial
+pyserial-asyncio
+RPi.GPIO
+six
+uvloop
+reticul8
