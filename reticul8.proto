@@ -2,48 +2,6 @@
 syntax = "proto2";
 import "nanopb.proto";
 
-
-//Commands
-
-
-//DigitalWrite
-//Toggle
-//Delay
-//I2C Read/Write
-//Firmware update
-//Analog output
-//Analog input
-//Touch sensor
-//Pulse counter
-//PWM
-//Beeper
-//Fade
-
-//}
-/*
-CMD_BEEP =
-CMD_BEEP_ON =
-CMD_BEEP_OFF =
-
-CMD_HELLO '!'
-CMD_START '$'
-
-CMD_KEY_PRESSED 'k'
-
-CMD_LCD_OFF 'o'
-CMD_LCD_DIM 'd'
-CMD_LCD_ON 'l'
-CMD_LCD_TEXT 't'
-CMD_LCD_CLEAR 'c'
-CMD_LCD_CHAR_SET 'C'
-CMD_LCD_CHAR_USE 'U'
-
-CMD_SUCCESS ':'
-CMD_ERROR '-'
-*/
-
-
-
 enum PIN_MODE {
     PM_INPUT_PULLUP = 1;
     PM_INPUT_PULLDOWN = 2;
@@ -157,7 +115,6 @@ message RPC {
 
     required uint32 msg_id = 200;
     optional SCHEDULE schedule = 201;
-//    optional bytes data = 202 [(nanopb).max_size = 128];
 }
 
 enum RESULT_TYPE {
