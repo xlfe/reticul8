@@ -11,30 +11,41 @@ OUTPUT = r8.PM_OUTPUT
 INPUT_PULLDOWN = r8.PM_INPUT_PULLDOWN
 INPUT_PULLUP = r8.PM_INPUT_PULLUP
 
-def ping():
-    return rpc.node.get().send_packet(rpc.RPC_Wrapper().ping())
+check_success = lambda _:_.result.result == r8.RT_SUCCESS
+send_rpc = lambda _:rpc.node.get().send_packet(rpc.RPC_Wrapper())
 
-def pinMode(pin, mode):
-    return rpc.node.get().send_packet(rpc.RPC_Wrapper().gpio_config(pin=pin, mode=mode))
 
-def digitalWrite(pin, value):
-    return rpc.node.get().send_packet(rpc.RPC_Wrapper().gpio_write(pin=pin, value=value))
+async def ping():
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ping()))
+
+async def pinMode(pin, mode):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().gpio_config(pin=pin, mode=mode)))
+
+async def digitalWrite(pin, value):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().gpio_write(pin=pin, value=value)))
 
 async def digitalRead(pin):
     result = await rpc.node.get().send_packet(rpc.RPC_Wrapper().gpio_read(pin=pin))
-    return result.pin_value
+    return result.result.pin_value
 
-from concurrent.futures import ThreadPoolExecutor
-def PWM_config(pin):
-    return rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_config(pin=pin))
+async def PWM_config(pin):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_config(pin=pin)))
 
-def PWM_duty(pin, duty):
-    return rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_duty(pin=pin, duty=duty))
+async def PWM_duty(pin, duty):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_duty(pin=pin, duty=duty)))
 
-def PWM_fade(pin, duty, fade_ms):
-    return rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_fade(pin=pin, duty=duty, fade_ms=fade_ms))
+async def PWM_fade(pin, duty, fade_ms):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_fade(pin=pin, duty=duty, fade_ms=fade_ms)))
 
+async def i2c_config(pin_sda, pin_scl):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().i2c_config(pin_sda=pin_sda, pin_scl=pin_scl)))
 
+async def i2c_read(device, address, len):
+    result = await rpc.node.get().send_packet(rpc.RPC_Wrapper().i2c_read(device=device, address=address,len=len))
+    return result.raw
+
+async def i2c_write(device, data):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().i2c_write(device=device, data=data, len=len(data))))
 
 
 

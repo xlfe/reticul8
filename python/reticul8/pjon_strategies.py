@@ -125,16 +125,13 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
         elif packet.WhichOneof('msg') == 'result':
 
-            packet = packet.result
-            self.received_ack_packets[packet.msg_id] = packet
+            msg_id = packet.result.msg_id
+            self.received_ack_packets[msg_id] = packet
 
-            if packet.msg_id in self.waiting_ack_packets:
-                sent = self.waiting_ack_packets.pop(packet.msg_id)
-                self.last_rtt = rtt = (datetime.datetime.now()  - sent).microseconds
-                average_pps = (self.msg_id/(1.0*(datetime.datetime.now() - node.startup).total_seconds()))
-            else:
-                rtt = 0
-                average_pps = 0
+            assert msg_id in self.waiting_ack_packets
+            sent = self.waiting_ack_packets.pop(msg_id)
+            self.last_rtt = rtt = (datetime.datetime.now()  - sent).microseconds
+            average_pps = (self.msg_id/(1.0*(datetime.datetime.now() - node.startup).total_seconds()))
 
             # if packet.msg_id not in [1,2]:
             #     asyncio.get_event_loop().call_later(PING_WAIT, self.cmd_ping)

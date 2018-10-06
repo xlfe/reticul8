@@ -15,6 +15,8 @@ import datetime
 import logging
 import os
 
+from bmp280 import BMP280
+
 try:
     import gpiozero
     esp = gpiozero.OutputDevice(pin=18, active_high=True, initial_value=True)
@@ -32,13 +34,18 @@ class TSA_Node(rpc.Node):
     async def notify_startup(self):
         print("startup!")
 
+        self.bmp = BMP280(self, 33, 32)
+        print(await self.bmp.temp_and_pressure)
+
         with self:
 
-            await pinMode(22, OUTPUT)
+            assert await ping()
+
+            assert await pinMode(22, OUTPUT)
             for i in range(5):
-                await digitalWrite(22, HIGH)
+                assert await digitalWrite(22, HIGH)
                 await sleep(.1)
-                await digitalWrite(22, LOW)
+                assert await digitalWrite(22, LOW)
                 await sleep(.1)
             await pinMode(19, INPUT_PULLUP)
             value = await digitalRead(19)
@@ -48,12 +55,13 @@ class TSA_Node(rpc.Node):
                 await ping()
 
             await PWM_config(22)
-            while True:
+            for i in range(3):
                 await PWM_fade(22, 0, 500)
                 await sleep(1)
                 await PWM_fade(22, 8192, 500)
                 await sleep(1)
 
+        print(await self.bmp.temp_and_pressure)
 
 
 
