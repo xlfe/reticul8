@@ -409,6 +409,12 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
     switch (request->which_call) {
         case (RPC_gpio_config_tag):
 
+#ifdef ESP32
+            if (!digitalPinIsValid(request->call.gpio_config.pin)) {
+                break;
+            }
+#endif
+
             switch (request->call.gpio_config.mode) {
                 case (PIN_MODE_PM_OUTPUT):
                     pinMode(request->call.gpio_config.pin, OUTPUT);
@@ -528,7 +534,7 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
                 if (i2c_bytes_read == request->call.i2c_read.len) {
                     m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
                     m->which_data = FROM_MICRO_raw_tag;
-                    memcpy(m->data.raw.bytes, i2c_buf, i2c_bytes_read);
+                    memcpy(&m->data.raw.bytes, i2c_buf, i2c_bytes_read);
                     m->data.raw.size = i2c_bytes_read;
                 }
             }
