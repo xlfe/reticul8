@@ -1,6 +1,10 @@
 #define ESP32 1
 #include "reticul8.h"
 
+#ifdef SWITCH
+RETICUL8::RETICUL8(PJONInteractiveRouter<PJONSwitch>*, uint8_t master_id) {
+    }
+#else
 RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id) {
     this->bus = bus;
     this->master_id = master_id;
@@ -11,6 +15,7 @@ RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id) {
     memset(&this->scheduled_commands, 0, sizeof this->scheduled_commands);
 
 }
+#endif
 
 void receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
     ((RETICUL8*)packet_info.custom_pointer)->r8_receiver_function(payload, length, packet_info);

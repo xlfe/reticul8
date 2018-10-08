@@ -13,6 +13,9 @@
 #include "Arduino.h"
 #include "wire.h"
 #include <PJON.h>
+#ifdef SWITCH
+    #include <PJONInteractiveRouter.h>
+#endif
 
 #include <pb.h>
 #include <pb_encode.h>
@@ -68,14 +71,22 @@ struct WATCHED_PIN {
 class RETICUL8 {
 
 public:
+#ifdef SWITCH
+    RETICUL8(PJONInteractiveRouter <PJONSwitch> *bus, uint8_t master_id);
+#else
     RETICUL8(PJON <Any> *bus, uint8_t master_id);
+#endif
     void loop();
     void begin();
     void r8_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info);
 
 
 private:
+#ifdef SWITCH
+    PJONInteractiveRouter <PJONSwitch> *bus;
+#else
     PJON <Any> *bus;
+#endif
     uint8_t master_id;
     void check_for_events();
 
