@@ -1,21 +1,23 @@
 #define ESP32 1
 #include "reticul8.h"
 
-#ifdef SWITCH
-RETICUL8::RETICUL8(PJONInteractiveRouter<PJONSwitch>*, uint8_t master_id) {
-    }
-#else
-RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id) {
+RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id, PJON <Any> *secondary[], uint8_t secondary_bus_count) {
     this->bus = bus;
     this->master_id = master_id;
+    this->secondary_bus_count = secondary_bus_count;
+    for (uint8_t i=0;i<secondary_bus_count;i++) {
+        this->secondary[i] = secondary[i];
+    }
+
     memset(&this->watched_pins, 0, sizeof this->watched_pins);
+    memset(&this->scheduled_commands, 0, sizeof this->scheduled_commands);
+
 #if ESP32
     memset(&this->ledc_channels, 0, sizeof this->ledc_channels);
 #endif
-    memset(&this->scheduled_commands, 0, sizeof this->scheduled_commands);
+
 
 }
-#endif
 
 void receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
     ((RETICUL8*)packet_info.custom_pointer)->r8_receiver_function(payload, length, packet_info);
@@ -35,7 +37,7 @@ void error_handler(uint8_t code, uint16_t data, void *custom_pointer) {
 
 
 void RETICUL8::begin(){
-    if ((PJON_PACKET_MAX_LENGTH - this->bus->packet_overhead()) < RPC_size) {
+    if ((PJON_PACKET_MAX_LENGTH - bus->packet_overhead()) < RPC_size) {
 //        don't start packet if the configuration might break...
        return;
     }
@@ -43,7 +45,16 @@ void RETICUL8::begin(){
     bus->set_custom_pointer(this);
     bus->set_receiver(receiver_function);
     bus->set_error(error_handler);
-    bus->set_crc_32(true);
+    if (this->secondary_bus_count) {
+        //do we need to route packets to other buses?
+        bus->set_router(true);
+    }
+
+    for (uint8_t i=0;i<secondary_bus_count;i++) {
+
+
+    }
+
     bus->begin();
 
     FROM_MICRO m = FROM_MICRO_init_zero;
@@ -79,6 +90,7 @@ void RETICUL8::begin(){
 
 }
 
+uint8_t LED_STATUS = 0;
 void RETICUL8::loop() {
     check_for_events();
     check_for_scheduled_commands();
