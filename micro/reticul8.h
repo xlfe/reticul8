@@ -68,6 +68,9 @@ struct WATCHED_PIN {
 #define MAX_SECONDARY_BUSSES 2
 
 
+struct BUS_DETAILS;
+
+
 class RETICUL8 {
 
 public:
@@ -80,12 +83,29 @@ public:
     void begin();
     void r8_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info);
 
+    uint8_t device_id() {
+        return bus->device_id();
+    }
+    uint8_t master_id() {
+        return _master_id;
+    }
+
+    PJON <Any> *get_bus(uint8_t idx) {
+        if (idx == 0) {
+            return bus;
+        }
+        if (idx > secondary_bus_count) {
+            return NULL;
+        }
+        return secondary[idx - 1];
+    }
+
 
 private:
     PJON <Any> *bus;
     PJON <Any> *secondary[MAX_SECONDARY_BUSSES];
     uint8_t secondary_bus_count = 0;
-    uint8_t master_id;
+    uint8_t _master_id;
     void check_for_events();
 
     void run_command(RPC *request, FROM_MICRO *reply);
@@ -122,6 +142,10 @@ private:
 
 };
 
+struct BUS_DETAILS {
+    RETICUL8 *r8;
+    uint8_t bus_idx;
+};
 
 void blink(uint8_t count=1);
 
