@@ -1,4 +1,5 @@
 import itertools
+import logging
 from . import reticul8_pb2 as r8
 
 
@@ -70,4 +71,5 @@ class Node(ContextDecorator):
         raise NotImplementedError()
 
     async def send_packet(self, packet):
+        logging.debug('Sending to {} packet {}'.format(self.device_id, packet))
         return await self.transport.send_packet_blocking(self.device_id, packet)

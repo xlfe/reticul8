@@ -66,7 +66,9 @@ struct WATCHED_PIN {
 
 
 #define MAX_SECONDARY_BUSSES 2
-
+#define MAX_SECONDARY_DEVICES 20
+#define RETICUL8_UNKNOWN_BUS 65530
+#include <map>
 
 struct BUS_DETAILS;
 
@@ -83,28 +85,17 @@ public:
     void begin();
     void r8_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info);
 
-    uint8_t device_id() {
-        return bus->device_id();
-    }
-    uint8_t master_id() {
-        return _master_id;
-    }
+    PJON <Any> *get_bus(uint8_t idx);
 
-    PJON <Any> *get_bus(uint8_t idx) {
-        if (idx == 0) {
-            return bus;
-        }
-        if (idx > secondary_bus_count) {
-            return NULL;
-        }
-        return secondary[idx - 1];
-    }
+    uint16_t get_device_bus(uint8_t device_id);
+    void set_device_bus(uint8_t device_id, uint8_t bus);
 
+    uint16_t forward_packet(uint8_t from_id, uint8_t to_id, PJON<Any> *from_bus, PJON<Any> *to_bus, uint8_t *payload, uint16_t length);
 
-private:
     PJON <Any> *bus;
     PJON <Any> *secondary[MAX_SECONDARY_BUSSES];
     uint8_t secondary_bus_count = 0;
+    std::map <uint8_t, uint8_t> secondary_bus_lookup;
     uint8_t _master_id;
     void check_for_events();
 

@@ -29,10 +29,10 @@ PING_WAIT = 0.0001
 
 from reticul8 import pjon_strategies, rpc
 from reticul8.arduino import *
-class TSA_Node(rpc.Node):
+class ESP_Node(rpc.Node):
 
     async def notify_startup(self):
-        print("startup!")
+        print("STARTUP from {}!".format(self.device_id))
 
         self.bmp = BMP280(self, 33, 32)
         print(await self.bmp.temp_and_pressure)
@@ -55,13 +55,43 @@ class TSA_Node(rpc.Node):
                 await ping()
 
             await PWM_config(22)
-            for i in range(3):
+            while True:
                 await PWM_fade(22, 0, 500)
                 await sleep(1)
                 await PWM_fade(22, 8192, 500)
                 await sleep(1)
 
         print(await self.bmp.temp_and_pressure)
+
+class TSA_Node(rpc.Node):
+
+    async def notify_startup(self):
+        print("startup from {}!".format(self.device_id))
+
+        with self:
+
+            assert await ping()
+
+            assert await pinMode(22, OUTPUT)
+            for i in range(5):
+                assert await digitalWrite(22, HIGH)
+                await sleep(.1)
+                assert await digitalWrite(22, LOW)
+                await sleep(.1)
+            await pinMode(19, INPUT_PULLUP)
+            value = await digitalRead(19)
+            print("HIGH" if value == HIGH else "LOW")
+
+            for i in range(10):
+                await ping()
+
+            await PWM_config(22)
+            while True:
+                await PWM_fade(22, 0, 500)
+                await sleep(1)
+                await PWM_fade(22, 8192, 500)
+                await sleep(1)
+
 
 
 
@@ -98,8 +128,13 @@ for port in UART_PORT:
         break
 
 
-node = TSA_Node(11, transport=tsaio)
+n1= TSA_Node(11, transport=tsaio)
+node = ESP_Node(12, transport=tsaio)
 
+# async def test_router():
+#     await asyncio.sleep(2)
+#     await node.notify_startup()
+# n1.notify_startup = test_router
 
 loop.run_forever()
 loop.close()

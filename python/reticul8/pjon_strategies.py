@@ -89,6 +89,7 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
     def send_packet(self, destination, packet):
         packet.msg_id = self.msg_id
+        logging.info(self.msg_id)
         self.msg_id += 1
 
         if len(self.waiting_ack_packets) > 0:
@@ -112,7 +113,12 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
     def recv_packet(self, source, packet):
 
-        node = self.nodes[source]
+        try:
+            node = self.nodes[source]
+        except KeyError:
+            logging.warning("Unknown node with ID {}".format(source))
+            return
+
 
         if packet.WhichOneof('msg') == 'startup':
             logging.debug("{} startup".format(source))
@@ -127,8 +133,10 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
             msg_id = packet.result.msg_id
             self.received_ack_packets[msg_id] = packet
+            logging.debug('received {} from {}'.format(msg_id, source))
 
-            assert msg_id in self.waiting_ack_packets
+            if msg_id not in self.waiting_ack_packets:
+                return
             sent = self.waiting_ack_packets.pop(msg_id)
             self.last_rtt = rtt = (datetime.datetime.now()  - sent).microseconds
             average_pps = (self.msg_id/(1.0*(datetime.datetime.now() - node.startup).total_seconds()))

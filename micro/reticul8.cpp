@@ -20,6 +20,14 @@ RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id, PJON <Any> *secondary[], 
 }
 
 
+PJON <Any> * RETICUL8::get_bus(uint8_t idx) {
+    if (!secondary_bus_count || secondary_bus_count <= idx ) {
+        return NULL;
+    }
+    return secondary[idx];
+}
+
+
 /*
  * Primary Bus has only the master connected (eg through serial)
  *
@@ -30,15 +38,83 @@ RETICUL8::RETICUL8(PJON <Any> *bus, uint8_t master_id, PJON <Any> *secondary[], 
  */
 
 void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
-    if (packet_info.receiver_id ==
-        ((RETICUL8 *) packet_info.custom_pointer)->device_id()
-            ) {
-        ((RETICUL8 *) packet_info.custom_pointer)->r8_receiver_function(payload, length, packet_info);
+
+    RETICUL8 * r8 = ((RETICUL8 *) packet_info.custom_pointer);
+    PJON<Any> *to_bus = NULL;
+
+    if (packet_info.receiver_id == r8->bus->device_id()) {
+        //Packet meant for this device
+        r8->r8_receiver_function(payload, length, packet_info);
     } else {
+        //Packet not meant for this device
+        uint16_t bus_idx = r8->get_device_bus(packet_info.receiver_id);
+
+        if (bus_idx == RETICUL8_UNKNOWN_BUS) {
+            //Don't know where this bus is...
+
+            for (bus_idx=0; bus_idx < r8->secondary_bus_count; bus_idx++){
+                to_bus = r8->get_bus(bus_idx);
+
+                if (r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length) ==PJON_ACK) {
+                    r8->set_device_bus(packet_info.receiver_id, bus_idx);
+                    break;
+                }
+            }
+
+            //Don't do anything...
+
+        } else {
+            to_bus = r8->get_bus(bus_idx);
+            if (to_bus == NULL)
+                return;
+            r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length);
+        }
         // figure out which bus this packet needs to go on
         // send blocking with timeout
         // once PJON_ACK is received, send an ack back on the primary bus
     }
+}
+
+uint16_t RETICUL8::get_device_bus(uint8_t device_id) {
+
+    std::map<uint8_t, uint8_t>::iterator it = this->secondary_bus_lookup.find(device_id);
+
+    if (it == this->secondary_bus_lookup.end()) {
+        return RETICUL8_UNKNOWN_BUS;
+    }
+    return it->second;
+}
+
+void RETICUL8::set_device_bus(uint8_t device_id, uint8_t bus) {
+    this->secondary_bus_lookup[device_id] = bus;
+}
+
+
+uint16_t RETICUL8::forward_packet(
+        uint8_t from_id,
+        uint8_t to_id,
+        PJON<Any> *from_bus,
+        PJON<Any> *to_bus,
+        uint8_t *payload,
+        uint16_t length) {
+
+    uint16_t ret;
+    uint8_t to_bus_original_id = to_bus->device_id();
+    to_bus->set_id(from_id);
+
+    if ((ret = to_bus->send_packet_blocking(
+            to_id,
+            (char*)payload,
+            length,
+            PJON_NO_HEADER,
+            0,
+            PJON_BROADCAST,
+            10000)
+            ) == PJON_ACK) {
+        from_bus->send_synchronous_acknowledge();
+    }
+    to_bus->set_id(to_bus_original_id);
+    return ret;
 }
 
 
@@ -51,16 +127,11 @@ void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON
 void secondary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
 
     BUS_DETAILS *bd = ((BUS_DETAILS*)packet_info.custom_pointer);
-    PJON<Any> *primary_bus = bd->r8->get_bus(0);
     PJON<Any> *my_bus = bd->r8->get_bus(bd->bus_idx);
 
-    if (primary_bus->send_packet_blocking(
-            bd->r8->master_id(),
-            (const char*)payload,
-            length
-            ) == PJON_ACK) {
-        my_bus->send_synchronous_acknowledge();
-    }
+    //make sure we know which bus this sender_id is on
+    bd->r8->set_device_bus(packet_info.sender_id, bd->bus_idx);
+    bd->r8->forward_packet(packet_info.sender_id, bd->r8->_master_id, my_bus, bd->r8->bus, payload, length);
 
 }
 
@@ -94,10 +165,11 @@ void RETICUL8::begin(){
     for (uint8_t i=0;i<secondary_bus_count;i++) {
         BUS_DETAILS *bd = new BUS_DETAILS;
         bd->r8 = this;
-        bd->bus_idx = i+1;
+        bd->bus_idx = i;
         secondary[i] -> set_custom_pointer(bd);
+        secondary[i] -> set_receiver(secondary_bus_receiver_function);
         // for devices on the secondary bus - this device should take the master_id...
-        secondary[i] -> set_id(master_id());
+        secondary[i] -> set_id(_master_id);
         secondary[i] -> begin();
     }
 
@@ -143,6 +215,12 @@ void RETICUL8::loop() {
     bus->update();
     vTaskDelay(1);
     bus->receive();
+
+    for (uint8_t i=0;i<secondary_bus_count;i++) {
+        secondary[i] -> update();
+        secondary[i] -> receive();
+    }
+
 }
 
 void RETICUL8::notify_event(FROM_MICRO *m) {
