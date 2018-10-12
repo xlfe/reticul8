@@ -90,7 +90,7 @@ public:
     uint16_t get_device_bus(uint8_t device_id);
     void set_device_bus(uint8_t device_id, uint8_t bus);
 
-    uint16_t forward_packet(uint8_t from_id, uint8_t to_id, PJON<Any> *from_bus, PJON<Any> *to_bus, uint8_t *payload, uint16_t length);
+    uint16_t forward_packet(uint8_t from_id, uint8_t to_id, PJON<Any> *from_bus, PJON<Any> *to_bus, uint8_t *payload, uint16_t length, bool send_ack=false);
 
     PJON <Any> *bus;
     PJON <Any> *secondary[MAX_SECONDARY_BUSSES];
