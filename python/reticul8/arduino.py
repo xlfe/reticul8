@@ -11,7 +11,7 @@ OUTPUT = r8.PM_OUTPUT
 INPUT_PULLDOWN = r8.PM_INPUT_PULLDOWN
 INPUT_PULLUP = r8.PM_INPUT_PULLUP
 
-check_success = lambda _:_.result.result == r8.RT_SUCCESS
+check_success = lambda _:_ is not None and _.result.result == r8.RT_SUCCESS
 send_rpc = lambda _:rpc.node.get().send_packet(rpc.RPC_Wrapper())
 
 

@@ -24,6 +24,7 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
         ser = serial.serial_for_url(*args, **kwargs)
         self.transport = SerialTransport(asyncio.get_event_loop(), self, ser)
         self.device_id = device_id
+        self.TIMEOUT_US = 100000
         self.nodes = {}
         self.waiting_ack_packets = {}
         self.received_ack_packets = {}
@@ -37,8 +38,10 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
         pjon_cython.ThroughSerialAsync.__init__(self, self.device_id, transport._serial.fd, int(transport._serial._baudrate))
         self.set_asynchronous_acknowledge(False)
-        self.set_synchronous_acknowledge(True)
+        self.set_synchronous_acknowledge(False)
         self.set_crc_32(True)
+        self.set_packet_id(True)
+        logging.error('Packet overhead {}'.format(self.packet_overhead()))
 
         # Tune this to your serial interface
         # A value of 0 seems to work well for USB serial interfaces,
@@ -51,6 +54,7 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
         asyncio.ensure_future(self.loop_task())
         asyncio.ensure_future(self.recv_task())
+        asyncio.ensure_future(self.clean_task())
 
         def br():
             self.proc_q.put_nowait(True)
@@ -76,6 +80,21 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
             self.recv_q.task_done()
 
+    async def clean_task(self):
+        while True:
+
+            for msg_id in list(self.waiting_ack_packets.keys()):
+                try:
+                    sent = self.waiting_ack_packets[msg_id]
+                    if (datetime.datetime.now() - sent).microseconds > self.TIMEOUT_US:
+                        logging.error('Packet ID {} timed out'.format(msg_id))
+                        self.received_ack_packets[msg_id] = None
+                        self.waiting_ack_packets.pop(msg_id)
+                except KeyError:
+                    continue
+
+            await asyncio.sleep(0.1)
+
     async def loop_task(self):
 
         while True:
@@ -89,7 +108,6 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
     def send_packet(self, destination, packet):
         packet.msg_id = self.msg_id
-        logging.info(self.msg_id)
         self.msg_id += 1
 
         if len(self.waiting_ack_packets) > 0:
@@ -102,12 +120,14 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
         return packet.msg_id
 
     async def send_packet_blocking(self, destination, packet):
+        # await asyncio.sleep(0.01)
         while len(self.waiting_ack_packets) > 0:
             await asyncio.sleep(LOOP_SLEEP)
         msg_id = self.send_packet(destination, packet)
-        while len(self.waiting_ack_packets) > 0:
+        while msg_id in self.waiting_ack_packets:
             await asyncio.sleep(LOOP_SLEEP)
 
+        await asyncio.sleep(0.02)
         return self.received_ack_packets.pop(msg_id)
 
 
@@ -133,9 +153,10 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
             msg_id = packet.result.msg_id
             self.received_ack_packets[msg_id] = packet
-            logging.debug('received {} from {}'.format(msg_id, source))
+            # logging.info('received {} from {}'.format(msg_id, source))
 
             if msg_id not in self.waiting_ack_packets:
+                logging.error('Received duplicate packet {}'.format(msg_id))
                 return
             sent = self.waiting_ack_packets.pop(msg_id)
             self.last_rtt = rtt = (datetime.datetime.now()  - sent).microseconds
@@ -144,7 +165,8 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
             # if packet.msg_id not in [1,2]:
             #     asyncio.get_event_loop().call_later(PING_WAIT, self.cmd_ping)
 
-            logging.info('RTT:{:>3,} ms ~pps:({:>5.2f}) waiting: {:>2} {}'.format(
+            logging.info('{}-RTT:{:>3,} ms ~pps:({:>5.2f}) waiting: {:>2} {}'.format(
+                    source,
                     int(rtt/1000),
                     average_pps,
                     len(self.waiting_ack_packets),

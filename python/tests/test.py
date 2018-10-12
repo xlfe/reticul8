@@ -39,13 +39,46 @@ class ESP_Node(rpc.Node):
 
         with self:
 
-            assert await ping()
+            await ping()
 
-            assert await pinMode(22, OUTPUT)
+            await pinMode(22, OUTPUT)
             for i in range(5):
-                assert await digitalWrite(22, HIGH)
+                await digitalWrite(22, HIGH)
                 await sleep(.1)
-                assert await digitalWrite(22, LOW)
+                await digitalWrite(22, LOW)
+                await sleep(.1)
+            await pinMode(19, INPUT_PULLUP)
+            value = await digitalRead(19)
+            print("HIGH" if value == HIGH else "LOW")
+
+            for i in range(10):
+                await ping()
+
+            await PWM_config(22)
+            print(await self.bmp.temp_and_pressure)
+            while True:
+                await ping()
+            while True:
+                await PWM_fade(22, 0, 500)
+                await sleep(1)
+                await PWM_fade(22, 8192, 500)
+                await sleep(1)
+
+
+class TSA_Node(rpc.Node):
+
+    async def notify_startup(self):
+        print("startup from {}!".format(self.device_id))
+
+        with self:
+
+            await ping()
+
+            await pinMode(22, OUTPUT)
+            for i in range(5):
+                await digitalWrite(22, HIGH)
+                await sleep(.1)
+                await digitalWrite(22, LOW)
                 await sleep(.1)
             await pinMode(19, INPUT_PULLUP)
             value = await digitalRead(19)
@@ -56,36 +89,8 @@ class ESP_Node(rpc.Node):
 
             await PWM_config(22)
             while True:
-                await PWM_fade(22, 0, 500)
-                await sleep(1)
-                await PWM_fade(22, 8192, 500)
-                await sleep(1)
-
-        print(await self.bmp.temp_and_pressure)
-
-class TSA_Node(rpc.Node):
-
-    async def notify_startup(self):
-        print("startup from {}!".format(self.device_id))
-
-        with self:
-
-            assert await ping()
-
-            assert await pinMode(22, OUTPUT)
-            for i in range(5):
-                assert await digitalWrite(22, HIGH)
-                await sleep(.1)
-                assert await digitalWrite(22, LOW)
-                await sleep(.1)
-            await pinMode(19, INPUT_PULLUP)
-            value = await digitalRead(19)
-            print("HIGH" if value == HIGH else "LOW")
-
-            for i in range(10):
                 await ping()
 
-            await PWM_config(22)
             while True:
                 await PWM_fade(22, 0, 500)
                 await sleep(1)

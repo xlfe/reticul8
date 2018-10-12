@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=_b('\n\x0ereticul8.proto\x1a\x0cnanopb.proto\":\n\x0bGPIO_CONFIG\x12\x12\n\x03pin\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\x12\x17\n\x04mode\x18\x02 \x02(\x0e\x32\t.PIN_MODE\"7\n\x0cGPIO_MONITOR\x12\x12\n\x03pin\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\x12\x13\n\x0b\x64\x65\x62ounce_ms\x18\x02 \x02(\r\";\n\nGPIO_WRITE\x12\x12\n\x03pin\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\x12\x19\n\x05value\x18\x02 \x02(\x0e\x32\n.PIN_VALUE\"\x1f\n\tGPIO_READ\x12\x12\n\x03pin\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\"1\n\nOTA_UPDATE\x12\r\n\x05\x63hunk\x18\x01 \x02(\r\x12\x14\n\x04\x64\x61ta\x18\x02 \x02(\x0c\x42\x06\x92?\x03\x08\xc0\x01\" \n\nPWM_CONFIG\x12\x12\n\x03pin\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\",\n\x08PWM_DUTY\x12\x12\n\x03pin\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\x12\x0c\n\x04\x64uty\x18\x02 \x02(\r\"=\n\x08PWM_FADE\x12\x12\n\x03pin\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\x12\x0c\n\x04\x64uty\x18\x02 \x02(\r\x12\x0f\n\x07\x66\x61\x64\x65_ms\x18\x03 \x02(\r\"<\n\nI2C_CONFIG\x12\x16\n\x07pin_sda\x18\x01 \x01(\rB\x05\x92?\x02\x38\x08\x12\x16\n\x07pin_scl\x18\x02 \x01(\rB\x05\x92?\x02\x38\x08\"K\n\tI2C_WRITE\x12\x15\n\x06\x64\x65vice\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\x12\x12\n\x03len\x18\x03 \x02(\rB\x05\x92?\x02\x38\x08\x12\x13\n\x04\x64\x61ta\x18\x04 \x02(\x0c\x42\x05\x92?\x02\x08 \"M\n\x08I2C_READ\x12\x15\n\x06\x64\x65vice\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\x12\x16\n\x07\x61\x64\x64ress\x18\x02 \x02(\rB\x05\x92?\x02\x38\x08\x12\x12\n\x03len\x18\x03 \x02(\rB\x05\x92?\x02\x38\x08\"\x14\n\x04PING\x12\x0c\n\x04ping\x18\x01 \x02(\x08\"\x1a\n\x07SYSINFO\x12\x0f\n\x07sysinfo\x18\x01 \x02(\x08\"=\n\x08SCHEDULE\x12\r\n\x05\x63ount\x18\x01 \x02(\x05\x12\x10\n\x08\x65very_ms\x18\x02 \x02(\r\x12\x10\n\x08\x61\x66ter_ms\x18\x03 \x02(\r\"R\n\nRUN_NESTED\x12\x16\n\x07\x63md_ptr\x18\x01 \x02(\x0c\x42\x05\x92?\x02\x08\x08\x12\x16\n\x07\x63md_len\x18\x02 \x02(\x0c\x42\x05\x92?\x02\x08\x08\x12\x14\n\x04\x64\x61ta\x18\x03 \x02(\x0c\x42\x06\x92?\x03\x08\xac\x01\"\x86\x04\n\x03RPC\x12#\n\x0bgpio_config\x18\x01 \x01(\x0b\x32\x0c.GPIO_CONFIGH\x00\x12!\n\ngpio_write\x18\x02 \x01(\x0b\x32\x0b.GPIO_WRITEH\x00\x12\x1f\n\tgpio_read\x18\x03 \x01(\x0b\x32\n.GPIO_READH\x00\x12%\n\x0cgpio_monitor\x18\x04 \x01(\x0b\x32\r.GPIO_MONITORH\x00\x12!\n\npwm_config\x18\x05 \x01(\x0b\x32\x0b.PWM_CONFIGH\x00\x12\x1d\n\x08pwm_duty\x18\x06 \x01(\x0b\x32\t.PWM_DUTYH\x00\x12\x1d\n\x08pwm_fade\x18\x07 \x01(\x0b\x32\t.PWM_FADEH\x00\x12\x15\n\x04ping\x18\x08 \x01(\x0b\x32\x05.PINGH\x00\x12\x1b\n\x07sysinfo\x18\t \x01(\x0b\x32\x08.SYSINFOH\x00\x12!\n\ni2c_config\x18\n \x01(\x0b\x32\x0b.I2C_CONFIGH\x00\x12\x1f\n\ti2c_write\x18\x0b \x01(\x0b\x32\n.I2C_WRITEH\x00\x12\x1d\n\x08i2c_read\x18\x0c \x01(\x0b\x32\t.I2C_READH\x00\x12!\n\nota_update\x18\r \x01(\x0b\x32\x0b.OTA_UPDATEH\x00\x12\x1d\n\x06nested\x18\x0e \x01(\x0b\x32\x0b.RUN_NESTEDH\x00\x12\x0f\n\x06msg_id\x18\xc8\x01 \x02(\r\x12\x1c\n\x08schedule\x18\xc9\x01 \x01(\x0b\x32\t.SCHEDULEB\x06\n\x04\x63\x61ll\";\n\nPIN_CHANGE\x12\x12\n\x03pin\x18\x01 \x02(\rB\x05\x92?\x02\x38\x08\x12\x19\n\x05value\x18\x02 \x02(\x0e\x32\n.PIN_VALUE\"Z\n\nRPC_RESULT\x12\x1c\n\x06result\x18\x01 \x02(\x0e\x32\x0c.RESULT_TYPE\x12\x1d\n\tpin_value\x18\x02 \x01(\x0e\x32\n.PIN_VALUE\x12\x0f\n\x06msg_id\x18\xc8\x01 \x02(\r\"\xb8\x01\n\nFROM_MICRO\x12\x1d\n\x06result\x18\x01 \x01(\x0b\x32\x0b.RPC_RESULTH\x00\x12!\n\npin_change\x18\x02 \x01(\x0b\x32\x0b.PIN_CHANGEH\x00\x12\"\n\x07startup\x18\x03 \x01(\x0e\x32\x0f.STARTUP_REASONH\x00\x12\x15\n\x03raw\x18\xc8\x01 \x01(\x0c\x42\x05\x92?\x02\x08@H\x01\x12\x1e\n\x13schedules_remaining\x18\xc9\x01 \x01(\x05H\x01\x42\x05\n\x03msgB\x06\n\x04\x64\x61ta*E\n\x08PIN_MODE\x12\x13\n\x0fPM_INPUT_PULLUP\x10\x01\x12\x15\n\x11PM_INPUT_PULLDOWN\x10\x02\x12\r\n\tPM_OUTPUT\x10\x03*$\n\tPIN_VALUE\x12\n\n\x06PV_LOW\x10\x00\x12\x0b\n\x07PV_HIGH\x10\x01*;\n\x0bRESULT_TYPE\x12\x0e\n\nRT_UNKNOWN\x10\x01\x12\x0e\n\nRT_SUCCESS\x10\x02\x12\x0c\n\x08RT_ERROR\x10\x03*\xa9\x03\n\x0eSTARTUP_REASON\x12\x0e\n\nSR_UNKNOWN\x10\x01\x12\x17\n\x13\x45SP32_POWERON_RESET\x10\x02\x12\x12\n\x0e\x45SP32_SW_RESET\x10\x03\x12\x14\n\x10\x45SP32_OWDT_RESET\x10\x04\x12\x19\n\x15\x45SP32_DEEPSLEEP_RESET\x10\x05\x12\x14\n\x10\x45SP32_SDIO_RESET\x10\x06\x12\x1a\n\x16\x45SP32_TG0WDT_SYS_RESET\x10\x07\x12\x1a\n\x16\x45SP32_TG1WDT_SYS_RESET\x10\x08\x12\x1a\n\x16\x45SP32_RTCWDT_SYS_RESET\x10\t\x12\x19\n\x15\x45SP32_INTRUSION_RESET\x10\n\x12\x19\n\x15\x45SP32_TGWDT_CPU_RESET\x10\x0b\x12\x16\n\x12\x45SP32_SW_CPU_RESET\x10\x0c\x12\x1a\n\x16\x45SP32_RTCWDT_CPU_RESET\x10\r\x12\x17\n\x13\x45SP32_EXT_CPU_RESET\x10\x0e\x12 \n\x1c\x45SP32_RTCWDT_BROWN_OUT_RESET\x10\x0f\x12\x1a\n\x16\x45SP32_RTCWDT_RTC_RESET\x10\x10')
+  serialized_pb=_b('\n\x0ereticul8.proto\x1a\x0cnanopb.proto\"3\n\x0bGPIO_CONFIG\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x17\n\x04mode\x18\x02 \x02(\x0e\x32\t.PIN_MODE\"0\n\x0cGPIO_MONITOR\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x13\n\x0b\x64\x65\x62ounce_ms\x18\x02 \x02(\x07\"4\n\nGPIO_WRITE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x19\n\x05value\x18\x02 \x02(\x0e\x32\n.PIN_VALUE\"\x18\n\tGPIO_READ\x12\x0b\n\x03pin\x18\x01 \x02(\x07\"1\n\nOTA_UPDATE\x12\r\n\x05\x63hunk\x18\x01 \x02(\x07\x12\x14\n\x04\x64\x61ta\x18\x02 \x02(\x0c\x42\x06\x92?\x03\x08\xc0\x01\"\x19\n\nPWM_CONFIG\x12\x0b\n\x03pin\x18\x01 \x02(\x07\"%\n\x08PWM_DUTY\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x0c\n\x04\x64uty\x18\x02 \x02(\x07\"6\n\x08PWM_FADE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x0c\n\x04\x64uty\x18\x02 \x02(\x07\x12\x0f\n\x07\x66\x61\x64\x65_ms\x18\x03 \x02(\x07\".\n\nI2C_CONFIG\x12\x0f\n\x07pin_sda\x18\x01 \x01(\x07\x12\x0f\n\x07pin_scl\x18\x02 \x01(\x07\"=\n\tI2C_WRITE\x12\x0e\n\x06\x64\x65vice\x18\x01 \x02(\x07\x12\x0b\n\x03len\x18\x03 \x02(\x07\x12\x13\n\x04\x64\x61ta\x18\x04 \x02(\x0c\x42\x05\x92?\x02\x08 \"8\n\x08I2C_READ\x12\x0e\n\x06\x64\x65vice\x18\x01 \x02(\x07\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x02(\x07\x12\x0b\n\x03len\x18\x03 \x02(\x07\"\x14\n\x04PING\x12\x0c\n\x04ping\x18\x01 \x02(\x08\"\x1a\n\x07SYSINFO\x12\x0f\n\x07sysinfo\x18\x01 \x02(\x08\"=\n\x08SCHEDULE\x12\r\n\x05\x63ount\x18\x01 \x02(\x0f\x12\x10\n\x08\x65very_ms\x18\x02 \x02(\x07\x12\x10\n\x08\x61\x66ter_ms\x18\x03 \x02(\x07\"\"\n\nRUN_NESTED\x12\x14\n\x04\x64\x61ta\x18\x03 \x02(\x0c\x42\x06\x92?\x03\x08\xc4\x01\"\x86\x04\n\x03RPC\x12#\n\x0bgpio_config\x18\x01 \x01(\x0b\x32\x0c.GPIO_CONFIGH\x00\x12!\n\ngpio_write\x18\x02 \x01(\x0b\x32\x0b.GPIO_WRITEH\x00\x12\x1f\n\tgpio_read\x18\x03 \x01(\x0b\x32\n.GPIO_READH\x00\x12%\n\x0cgpio_monitor\x18\x04 \x01(\x0b\x32\r.GPIO_MONITORH\x00\x12!\n\npwm_config\x18\x05 \x01(\x0b\x32\x0b.PWM_CONFIGH\x00\x12\x1d\n\x08pwm_duty\x18\x06 \x01(\x0b\x32\t.PWM_DUTYH\x00\x12\x1d\n\x08pwm_fade\x18\x07 \x01(\x0b\x32\t.PWM_FADEH\x00\x12\x15\n\x04ping\x18\x08 \x01(\x0b\x32\x05.PINGH\x00\x12\x1b\n\x07sysinfo\x18\t \x01(\x0b\x32\x08.SYSINFOH\x00\x12!\n\ni2c_config\x18\n \x01(\x0b\x32\x0b.I2C_CONFIGH\x00\x12\x1f\n\ti2c_write\x18\x0b \x01(\x0b\x32\n.I2C_WRITEH\x00\x12\x1d\n\x08i2c_read\x18\x0c \x01(\x0b\x32\t.I2C_READH\x00\x12!\n\nota_update\x18\r \x01(\x0b\x32\x0b.OTA_UPDATEH\x00\x12\x1d\n\x06nested\x18\x0e \x01(\x0b\x32\x0b.RUN_NESTEDH\x00\x12\x0f\n\x06msg_id\x18\xc8\x01 \x02(\x07\x12\x1c\n\x08schedule\x18\xc9\x01 \x01(\x0b\x32\t.SCHEDULEB\x06\n\x04\x63\x61ll\"4\n\nPIN_CHANGE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x19\n\x05value\x18\x02 \x02(\x0e\x32\n.PIN_VALUE\"Z\n\nRPC_RESULT\x12\x1c\n\x06result\x18\x01 \x02(\x0e\x32\x0c.RESULT_TYPE\x12\x1d\n\tpin_value\x18\x02 \x01(\x0e\x32\n.PIN_VALUE\x12\x0f\n\x06msg_id\x18\xc8\x01 \x02(\x07\"\xb8\x01\n\nFROM_MICRO\x12\x1d\n\x06result\x18\x01 \x01(\x0b\x32\x0b.RPC_RESULTH\x00\x12!\n\npin_change\x18\x02 \x01(\x0b\x32\x0b.PIN_CHANGEH\x00\x12\"\n\x07startup\x18\x03 \x01(\x0e\x32\x0f.STARTUP_REASONH\x00\x12\x15\n\x03raw\x18\xc8\x01 \x01(\x0c\x42\x05\x92?\x02\x08@H\x01\x12\x1e\n\x13schedules_remaining\x18\xc9\x01 \x01(\x07H\x01\x42\x05\n\x03msgB\x06\n\x04\x64\x61ta*E\n\x08PIN_MODE\x12\x13\n\x0fPM_INPUT_PULLUP\x10\x01\x12\x15\n\x11PM_INPUT_PULLDOWN\x10\x02\x12\r\n\tPM_OUTPUT\x10\x03*$\n\tPIN_VALUE\x12\n\n\x06PV_LOW\x10\x00\x12\x0b\n\x07PV_HIGH\x10\x01*;\n\x0bRESULT_TYPE\x12\x0e\n\nRT_UNKNOWN\x10\x01\x12\x0e\n\nRT_SUCCESS\x10\x02\x12\x0c\n\x08RT_ERROR\x10\x03*\xa9\x03\n\x0eSTARTUP_REASON\x12\x0e\n\nSR_UNKNOWN\x10\x01\x12\x17\n\x13\x45SP32_POWERON_RESET\x10\x02\x12\x12\n\x0e\x45SP32_SW_RESET\x10\x03\x12\x14\n\x10\x45SP32_OWDT_RESET\x10\x04\x12\x19\n\x15\x45SP32_DEEPSLEEP_RESET\x10\x05\x12\x14\n\x10\x45SP32_SDIO_RESET\x10\x06\x12\x1a\n\x16\x45SP32_TG0WDT_SYS_RESET\x10\x07\x12\x1a\n\x16\x45SP32_TG1WDT_SYS_RESET\x10\x08\x12\x1a\n\x16\x45SP32_RTCWDT_SYS_RESET\x10\t\x12\x19\n\x15\x45SP32_INTRUSION_RESET\x10\n\x12\x19\n\x15\x45SP32_TGWDT_CPU_RESET\x10\x0b\x12\x16\n\x12\x45SP32_SW_CPU_RESET\x10\x0c\x12\x1a\n\x16\x45SP32_RTCWDT_CPU_RESET\x10\r\x12\x17\n\x13\x45SP32_EXT_CPU_RESET\x10\x0e\x12 \n\x1c\x45SP32_RTCWDT_BROWN_OUT_RESET\x10\x0f\x12\x1a\n\x16\x45SP32_RTCWDT_RTC_RESET\x10\x10')
   ,
   dependencies=[nanopb__pb2.DESCRIPTOR,])
 
@@ -46,8 +46,8 @@ _PIN_MODE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1713,
-  serialized_end=1782,
+  serialized_start=1560,
+  serialized_end=1629,
 )
 _sym_db.RegisterEnumDescriptor(_PIN_MODE)
 
@@ -69,8 +69,8 @@ _PIN_VALUE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1784,
-  serialized_end=1820,
+  serialized_start=1631,
+  serialized_end=1667,
 )
 _sym_db.RegisterEnumDescriptor(_PIN_VALUE)
 
@@ -96,8 +96,8 @@ _RESULT_TYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1822,
-  serialized_end=1881,
+  serialized_start=1669,
+  serialized_end=1728,
 )
 _sym_db.RegisterEnumDescriptor(_RESULT_TYPE)
 
@@ -175,8 +175,8 @@ _STARTUP_REASON = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1884,
-  serialized_end=2309,
+  serialized_start=1731,
+  serialized_end=2156,
 )
 _sym_db.RegisterEnumDescriptor(_STARTUP_REASON)
 
@@ -217,11 +217,11 @@ _GPIO_CONFIG = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='GPIO_CONFIG.pin', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='mode', full_name='GPIO_CONFIG.mode', index=1,
       number=2, type=14, cpp_type=8, label=2,
@@ -242,7 +242,7 @@ _GPIO_CONFIG = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=32,
-  serialized_end=90,
+  serialized_end=83,
 )
 
 
@@ -255,14 +255,14 @@ _GPIO_MONITOR = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='GPIO_MONITOR.pin', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='debounce_ms', full_name='GPIO_MONITOR.debounce_ms', index=1,
-      number=2, type=13, cpp_type=3, label=2,
+      number=2, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -279,8 +279,8 @@ _GPIO_MONITOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=92,
-  serialized_end=147,
+  serialized_start=85,
+  serialized_end=133,
 )
 
 
@@ -293,11 +293,11 @@ _GPIO_WRITE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='GPIO_WRITE.pin', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='value', full_name='GPIO_WRITE.value', index=1,
       number=2, type=14, cpp_type=8, label=2,
@@ -317,8 +317,8 @@ _GPIO_WRITE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=149,
-  serialized_end=208,
+  serialized_start=135,
+  serialized_end=187,
 )
 
 
@@ -331,11 +331,11 @@ _GPIO_READ = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='GPIO_READ.pin', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -348,8 +348,8 @@ _GPIO_READ = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=210,
-  serialized_end=241,
+  serialized_start=189,
+  serialized_end=213,
 )
 
 
@@ -362,7 +362,7 @@ _OTA_UPDATE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='chunk', full_name='OTA_UPDATE.chunk', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -386,8 +386,8 @@ _OTA_UPDATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=243,
-  serialized_end=292,
+  serialized_start=215,
+  serialized_end=264,
 )
 
 
@@ -400,11 +400,11 @@ _PWM_CONFIG = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='PWM_CONFIG.pin', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -417,8 +417,8 @@ _PWM_CONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=294,
-  serialized_end=326,
+  serialized_start=266,
+  serialized_end=291,
 )
 
 
@@ -431,14 +431,14 @@ _PWM_DUTY = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='PWM_DUTY.pin', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='duty', full_name='PWM_DUTY.duty', index=1,
-      number=2, type=13, cpp_type=3, label=2,
+      number=2, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -455,8 +455,8 @@ _PWM_DUTY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=328,
-  serialized_end=372,
+  serialized_start=293,
+  serialized_end=330,
 )
 
 
@@ -469,21 +469,21 @@ _PWM_FADE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='PWM_FADE.pin', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='duty', full_name='PWM_FADE.duty', index=1,
-      number=2, type=13, cpp_type=3, label=2,
+      number=2, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='fade_ms', full_name='PWM_FADE.fade_ms', index=2,
-      number=3, type=13, cpp_type=3, label=2,
+      number=3, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -500,8 +500,8 @@ _PWM_FADE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=374,
-  serialized_end=435,
+  serialized_start=332,
+  serialized_end=386,
 )
 
 
@@ -514,18 +514,18 @@ _I2C_CONFIG = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin_sda', full_name='I2C_CONFIG.pin_sda', index=0,
-      number=1, type=13, cpp_type=3, label=1,
+      number=1, type=7, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='pin_scl', full_name='I2C_CONFIG.pin_scl', index=1,
-      number=2, type=13, cpp_type=3, label=1,
+      number=2, type=7, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -538,8 +538,8 @@ _I2C_CONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=437,
-  serialized_end=497,
+  serialized_start=388,
+  serialized_end=434,
 )
 
 
@@ -552,18 +552,18 @@ _I2C_WRITE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='device', full_name='I2C_WRITE.device', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='len', full_name='I2C_WRITE.len', index=1,
-      number=3, type=13, cpp_type=3, label=2,
+      number=3, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='data', full_name='I2C_WRITE.data', index=2,
       number=4, type=12, cpp_type=9, label=2,
@@ -583,8 +583,8 @@ _I2C_WRITE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=499,
-  serialized_end=574,
+  serialized_start=436,
+  serialized_end=497,
 )
 
 
@@ -597,25 +597,25 @@ _I2C_READ = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='device', full_name='I2C_READ.device', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='address', full_name='I2C_READ.address', index=1,
-      number=2, type=13, cpp_type=3, label=2,
+      number=2, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='len', full_name='I2C_READ.len', index=2,
-      number=3, type=13, cpp_type=3, label=2,
+      number=3, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -628,8 +628,8 @@ _I2C_READ = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=576,
-  serialized_end=653,
+  serialized_start=499,
+  serialized_end=555,
 )
 
 
@@ -659,8 +659,8 @@ _PING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=655,
-  serialized_end=675,
+  serialized_start=557,
+  serialized_end=577,
 )
 
 
@@ -690,8 +690,8 @@ _SYSINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=677,
-  serialized_end=703,
+  serialized_start=579,
+  serialized_end=605,
 )
 
 
@@ -704,21 +704,21 @@ _SCHEDULE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='count', full_name='SCHEDULE.count', index=0,
-      number=1, type=5, cpp_type=1, label=2,
+      number=1, type=15, cpp_type=1, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='every_ms', full_name='SCHEDULE.every_ms', index=1,
-      number=2, type=13, cpp_type=3, label=2,
+      number=2, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='after_ms', full_name='SCHEDULE.after_ms', index=2,
-      number=3, type=13, cpp_type=3, label=2,
+      number=3, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -735,8 +735,8 @@ _SCHEDULE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=705,
-  serialized_end=766,
+  serialized_start=607,
+  serialized_end=668,
 )
 
 
@@ -748,26 +748,12 @@ _RUN_NESTED = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='cmd_ptr', full_name='RUN_NESTED.cmd_ptr', index=0,
-      number=1, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b(""),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\002\010\010'), file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='cmd_len', full_name='RUN_NESTED.cmd_len', index=1,
-      number=2, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b(""),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\002\010\010'), file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='data', full_name='RUN_NESTED.data', index=2,
+      name='data', full_name='RUN_NESTED.data', index=0,
       number=3, type=12, cpp_type=9, label=2,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\003\010\254\001'), file=DESCRIPTOR),
+      serialized_options=_b('\222?\003\010\304\001'), file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -780,8 +766,8 @@ _RUN_NESTED = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=768,
-  serialized_end=850,
+  serialized_start=670,
+  serialized_end=704,
 )
 
 
@@ -892,7 +878,7 @@ _RPC = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='msg_id', full_name='RPC.msg_id', index=14,
-      number=200, type=13, cpp_type=3, label=2,
+      number=200, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -919,8 +905,8 @@ _RPC = _descriptor.Descriptor(
       name='call', full_name='RPC.call',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=853,
-  serialized_end=1371,
+  serialized_start=707,
+  serialized_end=1225,
 )
 
 
@@ -933,11 +919,11 @@ _PIN_CHANGE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='PIN_CHANGE.pin', index=0,
-      number=1, type=13, cpp_type=3, label=2,
+      number=1, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=_b('\222?\0028\010'), file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='value', full_name='PIN_CHANGE.value', index=1,
       number=2, type=14, cpp_type=8, label=2,
@@ -957,8 +943,8 @@ _PIN_CHANGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1373,
-  serialized_end=1432,
+  serialized_start=1227,
+  serialized_end=1279,
 )
 
 
@@ -985,7 +971,7 @@ _RPC_RESULT = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='msg_id', full_name='RPC_RESULT.msg_id', index=2,
-      number=200, type=13, cpp_type=3, label=2,
+      number=200, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -1002,8 +988,8 @@ _RPC_RESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1434,
-  serialized_end=1524,
+  serialized_start=1281,
+  serialized_end=1371,
 )
 
 
@@ -1044,7 +1030,7 @@ _FROM_MICRO = _descriptor.Descriptor(
       serialized_options=_b('\222?\002\010@'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='schedules_remaining', full_name='FROM_MICRO.schedules_remaining', index=4,
-      number=201, type=5, cpp_type=1, label=1,
+      number=201, type=7, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -1067,8 +1053,8 @@ _FROM_MICRO = _descriptor.Descriptor(
       name='data', full_name='FROM_MICRO.data',
       index=1, containing_type=None, fields=[]),
   ],
-  serialized_start=1527,
-  serialized_end=1711,
+  serialized_start=1374,
+  serialized_end=1558,
 )
 
 _GPIO_CONFIG.fields_by_name['mode'].enum_type = _PIN_MODE
@@ -1310,25 +1296,8 @@ FROM_MICRO = _reflection.GeneratedProtocolMessageType('FROM_MICRO', (_message.Me
 _sym_db.RegisterMessage(FROM_MICRO)
 
 
-_GPIO_CONFIG.fields_by_name['pin']._options = None
-_GPIO_MONITOR.fields_by_name['pin']._options = None
-_GPIO_WRITE.fields_by_name['pin']._options = None
-_GPIO_READ.fields_by_name['pin']._options = None
 _OTA_UPDATE.fields_by_name['data']._options = None
-_PWM_CONFIG.fields_by_name['pin']._options = None
-_PWM_DUTY.fields_by_name['pin']._options = None
-_PWM_FADE.fields_by_name['pin']._options = None
-_I2C_CONFIG.fields_by_name['pin_sda']._options = None
-_I2C_CONFIG.fields_by_name['pin_scl']._options = None
-_I2C_WRITE.fields_by_name['device']._options = None
-_I2C_WRITE.fields_by_name['len']._options = None
 _I2C_WRITE.fields_by_name['data']._options = None
-_I2C_READ.fields_by_name['device']._options = None
-_I2C_READ.fields_by_name['address']._options = None
-_I2C_READ.fields_by_name['len']._options = None
-_RUN_NESTED.fields_by_name['cmd_ptr']._options = None
-_RUN_NESTED.fields_by_name['cmd_len']._options = None
 _RUN_NESTED.fields_by_name['data']._options = None
-_PIN_CHANGE.fields_by_name['pin']._options = None
 _FROM_MICRO.fields_by_name['raw']._options = None
 # @@protoc_insertion_point(module_scope)
