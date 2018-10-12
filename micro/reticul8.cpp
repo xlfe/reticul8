@@ -67,7 +67,8 @@ void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON
             to_bus = r8->get_bus(bus_idx);
             if (to_bus == NULL)
                 return;
-            r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length);
+            r8->forward_packet(r8->_master_id, packet_info.receiver_id,
+                    r8->bus, to_bus, payload, length, packet_info.header & PJON_ACK_REQ_BIT);
         }
         // figure out which bus this packet needs to go on
         // send blocking with timeout
@@ -134,7 +135,8 @@ void secondary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJ
 
     //make sure we know which bus this sender_id is on
     bd->r8->set_device_bus(packet_info.sender_id, bd->bus_idx);
-    bd->r8->forward_packet(packet_info.sender_id, bd->r8->_master_id, my_bus, bd->r8->bus, payload, length, true);
+    bd->r8->forward_packet(packet_info.sender_id, bd->r8->_master_id,
+            my_bus, bd->r8->bus, payload, length, packet_info.header & PJON_ACK_REQ_BIT);
 
 }
 
