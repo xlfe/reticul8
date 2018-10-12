@@ -9,13 +9,13 @@ enum PIN_MODE {
 }
 
 message GPIO_CONFIG {
-    required uint32 pin = 1 [(nanopb).int_size = IS_8];
+    required fixed32 pin = 1;
     required PIN_MODE mode = 2;
 };
 
 message GPIO_MONITOR {
-    required uint32 pin = 1 [(nanopb).int_size = IS_8];
-    required uint32 debounce_ms = 2;
+    required fixed32 pin = 1;
+    required fixed32 debounce_ms = 2;
 }
 
 enum PIN_VALUE {
@@ -24,51 +24,52 @@ enum PIN_VALUE {
 }
 
 message GPIO_WRITE {
-    required uint32 pin = 1 [(nanopb).int_size = IS_8];
+    required fixed32 pin = 1;
     required PIN_VALUE value  = 2;
 };
 
 message GPIO_READ {
-    required uint32 pin = 1 [(nanopb).int_size = IS_8];
+    required fixed32 pin = 1;
 }
 
 message OTA_UPDATE {
-    required uint32 chunk = 1;
-    required bytes data = 2 [(nanopb).max_size=192];
+    required fixed32 chunk = 1;
+    required bytes data = 2 [(nanopb) = {max_size: 192}];
 }
 
+
 message PWM_CONFIG {
-    required uint32 pin =1 [(nanopb).int_size = IS_8];
+    required fixed32 pin =1;
 }
 
 // Max duty is 8192
 
 message PWM_DUTY {
-    required uint32 pin =1 [(nanopb).int_size = IS_8];
-    required uint32 duty = 2;
+    required fixed32 pin =1;
+    required fixed32 duty = 2;
 }
 
 message PWM_FADE {
-    required uint32 pin = 1 [(nanopb).int_size = IS_8];
-    required uint32 duty = 2;
-    required uint32 fade_ms = 3;
+    required fixed32 pin = 1;
+    required fixed32 duty = 2;
+    required fixed32 fade_ms = 3;
 }
 
 message I2C_CONFIG {
-    optional uint32 pin_sda = 1 [(nanopb).int_size = IS_8];
-    optional uint32 pin_scl = 2 [(nanopb).int_size = IS_8];
+    optional fixed32 pin_sda = 1;
+    optional fixed32 pin_scl = 2;
 }
 
 message I2C_WRITE {
-    required uint32 device = 1 [(nanopb).int_size = IS_8];
-    required uint32 len = 3 [(nanopb).int_size = IS_8];
+    required fixed32 device = 1;
+    required fixed32 len = 3;
     required bytes data = 4 [(nanopb).max_size=32];
 }
 
 message I2C_READ {
-    required uint32 device = 1 [(nanopb).int_size = IS_8];
-    required uint32 address = 2 [(nanopb).int_size = IS_8];
-    required uint32 len = 3 [(nanopb).int_size = IS_8];
+    required fixed32 device = 1;
+    required fixed32 address = 2;
+    required fixed32 len = 3;
 }
 
 message PING {
@@ -79,16 +80,14 @@ message SYSINFO {
 }
 
 message SCHEDULE {
-    required int32 count = 1;
-    required uint32 every_ms = 2;
-    required uint32 after_ms = 3;
+    required sfixed32 count = 1;
+    required fixed32 every_ms = 2;
+    required fixed32 after_ms = 3;
 }
 
 // Allow a nested command to run using the optional data
 message RUN_NESTED {
-    required bytes cmd_ptr = 1 [(nanopb).max_size = 8];
-    required bytes cmd_len = 2 [(nanopb).max_size = 8];
-    required bytes data = 3 [(nanopb).max_size=172];
+    required bytes data = 3 [(nanopb).max_size=196];
 }
 
 message RPC {
@@ -113,7 +112,7 @@ message RPC {
         RUN_NESTED nested = 14;
     }
 
-    required uint32 msg_id = 200;
+    required fixed32 msg_id = 200;
     optional SCHEDULE schedule = 201;
 }
 
@@ -124,7 +123,7 @@ enum RESULT_TYPE {
 }
 
 message PIN_CHANGE {
-    required uint32 pin = 1 [(nanopb).int_size = IS_8];
+    required fixed32 pin = 1;
     required PIN_VALUE value =2;
 }
 
@@ -150,7 +149,7 @@ enum STARTUP_REASON {
 message RPC_RESULT {
     required RESULT_TYPE result = 1;
     optional PIN_VALUE pin_value = 2;
-    required uint32 msg_id = 200;
+    required fixed32 msg_id = 200;
 }
 
 message FROM_MICRO {
@@ -163,7 +162,7 @@ message FROM_MICRO {
 
     oneof data {
         bytes raw = 200 [(nanopb).max_size = 64];
-        int32 schedules_remaining = 201;
+        fixed32 schedules_remaining = 201;
 
     }
 }
