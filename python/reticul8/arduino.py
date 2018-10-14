@@ -1,4 +1,5 @@
 import itertools
+import random
 from . import reticul8_pb2 as r8
 from . import rpc
 
@@ -37,6 +38,9 @@ async def PWM_duty(pin, duty):
 async def PWM_fade(pin, duty, fade_ms):
     return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_fade(pin=pin, duty=duty, fade_ms=fade_ms)))
 
+async def PWM_stop(pin):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_stop(pin=pin)))
+
 async def i2c_config(pin_sda, pin_scl):
     return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().i2c_config(pin_sda=pin_sda, pin_scl=pin_scl)))
 
@@ -46,6 +50,9 @@ async def i2c_read(device, address, len):
 
 async def i2c_write(device, data):
     return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().i2c_write(device=device, data=data, len=len(data))))
+
+async def ota_test():
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=random.randint(0,1000000), data=192*b'd')))
 
 
 

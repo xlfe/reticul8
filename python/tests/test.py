@@ -39,9 +39,15 @@ class ESP_Node(rpc.Node):
 
         with self:
 
+            assert await pinMode(22, OUTPUT)
+            h = 0
+            while True:
+                await digitalWrite(22, LOW if h ==0 else HIGH)
+                h = 0 if h == 1 else 1
+                await ota_test()
+
             await ping()
 
-            await pinMode(22, OUTPUT)
             for i in range(5):
                 await digitalWrite(22, HIGH)
                 await sleep(.1)
@@ -57,8 +63,6 @@ class ESP_Node(rpc.Node):
             await PWM_config(22)
             print(await self.bmp.temp_and_pressure)
             while True:
-                await ping()
-            while True:
                 await PWM_fade(22, 0, 500)
                 await sleep(1)
                 await PWM_fade(22, 8192, 500)
@@ -69,34 +73,42 @@ class TSA_Node(rpc.Node):
 
     async def notify_startup(self):
         print("startup from {}!".format(self.device_id))
+        if False:
+            other = self.transport.nodes[12]
+            other.startup = datetime.datetime.now()
+            asyncio.ensure_future(other.notify_startup())
 
         with self:
 
             await ping()
 
             await pinMode(22, OUTPUT)
-            for i in range(5):
+            for i in range(3):
                 await digitalWrite(22, HIGH)
                 await sleep(.1)
                 await digitalWrite(22, LOW)
                 await sleep(.1)
-            await pinMode(19, INPUT_PULLUP)
-            value = await digitalRead(19)
-            print("HIGH" if value == HIGH else "LOW")
 
-            for i in range(10):
-                await ping()
+            await pinMode(19, INPUT_PULLUP)
+            assert await digitalRead(19) == HIGH
 
             await PWM_config(22)
-            while True:
-                await ping()
 
-            while True:
+            for i in range(1):
                 await PWM_fade(22, 0, 500)
                 await sleep(1)
                 await PWM_fade(22, 8192, 500)
                 await sleep(1)
 
+            await PWM_fade(22,0, 5000)
+            await asyncio.sleep(5)
+            assert await pinMode(22, OUTPUT) is True
+
+            while True:
+                await digitalWrite(22, HIGH)
+                await sleep(1)
+                await digitalWrite(22, LOW)
+                await sleep(1)
 
 
 
@@ -135,6 +147,8 @@ for port in UART_PORT:
 
 n1= TSA_Node(11, transport=tsaio)
 node = ESP_Node(12, transport=tsaio)
+
+
 
 # async def test_router():
 #     await asyncio.sleep(2)

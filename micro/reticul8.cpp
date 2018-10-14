@@ -55,7 +55,7 @@ void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON
             for (bus_idx=0; bus_idx < r8->secondary_bus_count; bus_idx++){
                 to_bus = r8->get_bus(bus_idx);
 
-                if (r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length) ==PJON_ACK) {
+                if (r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length) == PJON_ACK) {
                     r8->set_device_bus(packet_info.receiver_id, bus_idx);
                     break;
                 }
@@ -385,9 +385,7 @@ bool setup_esp32_ledc_timer() {
     return false;
 }
 
-
-bool RETICUL8::setup_ledc_channel(uint8_t pin) {
-
+bool RETICUL8::check_if_pin_is_ledc_channel(uint8_t pin) {
     if (!setup_esp32_ledc_timer()) {
         return false;
     }
@@ -397,6 +395,40 @@ bool RETICUL8::setup_ledc_channel(uint8_t pin) {
             return true;
         }
     }
+
+    return false;
+}
+
+bool RETICUL8::stop_ledc_channel(uint8_t pin) {
+
+    if (!setup_esp32_ledc_timer()) {
+        return false;
+    }
+
+    for(uint16_t i = 0; i < RETICUL8_MAX_LEDC_CHANNELS; i++) {
+        if (this->ledc_channels[i].config.gpio_num == pin) {
+            if(ledc_stop(this->ledc_channels[i].config.speed_mode, (ledc_channel_t)i, 0) == ESP_OK &&
+                gpio_reset_pin((gpio_num_t)this->ledc_channels[i].config.gpio_num) == ESP_OK) {
+                memset(&this->ledc_channels[i], 0, sizeof this->ledc_channels[i]);
+                return true;
+            }
+        }
+    }
+
+    return false;
+
+}
+
+bool RETICUL8::setup_ledc_channel(uint8_t pin) {
+
+    if (!setup_esp32_ledc_timer()) {
+        return false;
+    }
+
+    if (check_if_pin_is_ledc_channel(pin)) {
+        return true;
+    }
+
 
     for(uint16_t i = 0; i < RETICUL8_MAX_LEDC_CHANNELS; i++) {
         if (this->ledc_channels[i].state == LEDC_NOT_IN_USE) {
@@ -559,6 +591,12 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
             if (!digitalPinIsValid(request->call.gpio_config.pin)) {
                 break;
             }
+
+            if (check_if_pin_is_ledc_channel(request->call.gpio_config.pin)) {
+                if (!stop_ledc_channel(request->call.gpio_config.pin)) {
+                    break;
+                }
+            }
 #endif
 
             switch (request->call.gpio_config.mode) {
@@ -636,6 +674,13 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
             }
             break;
 
+        case (RPC_pwm_stop_tag):
+
+            if (stop_ledc_channel(request->call.pwm_fade.pin)){
+                m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+            }
+
+            break;
         case (RPC_pwm_fade_tag):
 
             if (set_ledc_fade(request->call.pwm_fade.pin, request->call.pwm_fade.duty, request->call.pwm_fade.fade_ms)) {

@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=_b('\n\x0ereticul8.proto\x1a\x0cnanopb.proto\"3\n\x0bGPIO_CONFIG\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x17\n\x04mode\x18\x02 \x02(\x0e\x32\t.PIN_MODE\"0\n\x0cGPIO_MONITOR\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x13\n\x0b\x64\x65\x62ounce_ms\x18\x02 \x02(\x07\"4\n\nGPIO_WRITE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x19\n\x05value\x18\x02 \x02(\x0e\x32\n.PIN_VALUE\"\x18\n\tGPIO_READ\x12\x0b\n\x03pin\x18\x01 \x02(\x07\"1\n\nOTA_UPDATE\x12\r\n\x05\x63hunk\x18\x01 \x02(\x07\x12\x14\n\x04\x64\x61ta\x18\x02 \x02(\x0c\x42\x06\x92?\x03\x08\xc0\x01\"\x19\n\nPWM_CONFIG\x12\x0b\n\x03pin\x18\x01 \x02(\x07\"%\n\x08PWM_DUTY\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x0c\n\x04\x64uty\x18\x02 \x02(\x07\"6\n\x08PWM_FADE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x0c\n\x04\x64uty\x18\x02 \x02(\x07\x12\x0f\n\x07\x66\x61\x64\x65_ms\x18\x03 \x02(\x07\".\n\nI2C_CONFIG\x12\x0f\n\x07pin_sda\x18\x01 \x01(\x07\x12\x0f\n\x07pin_scl\x18\x02 \x01(\x07\"=\n\tI2C_WRITE\x12\x0e\n\x06\x64\x65vice\x18\x01 \x02(\x07\x12\x0b\n\x03len\x18\x03 \x02(\x07\x12\x13\n\x04\x64\x61ta\x18\x04 \x02(\x0c\x42\x05\x92?\x02\x08 \"8\n\x08I2C_READ\x12\x0e\n\x06\x64\x65vice\x18\x01 \x02(\x07\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x02(\x07\x12\x0b\n\x03len\x18\x03 \x02(\x07\"\x14\n\x04PING\x12\x0c\n\x04ping\x18\x01 \x02(\x08\"\x1a\n\x07SYSINFO\x12\x0f\n\x07sysinfo\x18\x01 \x02(\x08\"=\n\x08SCHEDULE\x12\r\n\x05\x63ount\x18\x01 \x02(\x0f\x12\x10\n\x08\x65very_ms\x18\x02 \x02(\x07\x12\x10\n\x08\x61\x66ter_ms\x18\x03 \x02(\x07\"\"\n\nRUN_NESTED\x12\x14\n\x04\x64\x61ta\x18\x03 \x02(\x0c\x42\x06\x92?\x03\x08\xc4\x01\"\x86\x04\n\x03RPC\x12#\n\x0bgpio_config\x18\x01 \x01(\x0b\x32\x0c.GPIO_CONFIGH\x00\x12!\n\ngpio_write\x18\x02 \x01(\x0b\x32\x0b.GPIO_WRITEH\x00\x12\x1f\n\tgpio_read\x18\x03 \x01(\x0b\x32\n.GPIO_READH\x00\x12%\n\x0cgpio_monitor\x18\x04 \x01(\x0b\x32\r.GPIO_MONITORH\x00\x12!\n\npwm_config\x18\x05 \x01(\x0b\x32\x0b.PWM_CONFIGH\x00\x12\x1d\n\x08pwm_duty\x18\x06 \x01(\x0b\x32\t.PWM_DUTYH\x00\x12\x1d\n\x08pwm_fade\x18\x07 \x01(\x0b\x32\t.PWM_FADEH\x00\x12\x15\n\x04ping\x18\x08 \x01(\x0b\x32\x05.PINGH\x00\x12\x1b\n\x07sysinfo\x18\t \x01(\x0b\x32\x08.SYSINFOH\x00\x12!\n\ni2c_config\x18\n \x01(\x0b\x32\x0b.I2C_CONFIGH\x00\x12\x1f\n\ti2c_write\x18\x0b \x01(\x0b\x32\n.I2C_WRITEH\x00\x12\x1d\n\x08i2c_read\x18\x0c \x01(\x0b\x32\t.I2C_READH\x00\x12!\n\nota_update\x18\r \x01(\x0b\x32\x0b.OTA_UPDATEH\x00\x12\x1d\n\x06nested\x18\x0e \x01(\x0b\x32\x0b.RUN_NESTEDH\x00\x12\x0f\n\x06msg_id\x18\xc8\x01 \x02(\x07\x12\x1c\n\x08schedule\x18\xc9\x01 \x01(\x0b\x32\t.SCHEDULEB\x06\n\x04\x63\x61ll\"4\n\nPIN_CHANGE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x19\n\x05value\x18\x02 \x02(\x0e\x32\n.PIN_VALUE\"Z\n\nRPC_RESULT\x12\x1c\n\x06result\x18\x01 \x02(\x0e\x32\x0c.RESULT_TYPE\x12\x1d\n\tpin_value\x18\x02 \x01(\x0e\x32\n.PIN_VALUE\x12\x0f\n\x06msg_id\x18\xc8\x01 \x02(\x07\"\xb8\x01\n\nFROM_MICRO\x12\x1d\n\x06result\x18\x01 \x01(\x0b\x32\x0b.RPC_RESULTH\x00\x12!\n\npin_change\x18\x02 \x01(\x0b\x32\x0b.PIN_CHANGEH\x00\x12\"\n\x07startup\x18\x03 \x01(\x0e\x32\x0f.STARTUP_REASONH\x00\x12\x15\n\x03raw\x18\xc8\x01 \x01(\x0c\x42\x05\x92?\x02\x08@H\x01\x12\x1e\n\x13schedules_remaining\x18\xc9\x01 \x01(\x07H\x01\x42\x05\n\x03msgB\x06\n\x04\x64\x61ta*E\n\x08PIN_MODE\x12\x13\n\x0fPM_INPUT_PULLUP\x10\x01\x12\x15\n\x11PM_INPUT_PULLDOWN\x10\x02\x12\r\n\tPM_OUTPUT\x10\x03*$\n\tPIN_VALUE\x12\n\n\x06PV_LOW\x10\x00\x12\x0b\n\x07PV_HIGH\x10\x01*;\n\x0bRESULT_TYPE\x12\x0e\n\nRT_UNKNOWN\x10\x01\x12\x0e\n\nRT_SUCCESS\x10\x02\x12\x0c\n\x08RT_ERROR\x10\x03*\xa9\x03\n\x0eSTARTUP_REASON\x12\x0e\n\nSR_UNKNOWN\x10\x01\x12\x17\n\x13\x45SP32_POWERON_RESET\x10\x02\x12\x12\n\x0e\x45SP32_SW_RESET\x10\x03\x12\x14\n\x10\x45SP32_OWDT_RESET\x10\x04\x12\x19\n\x15\x45SP32_DEEPSLEEP_RESET\x10\x05\x12\x14\n\x10\x45SP32_SDIO_RESET\x10\x06\x12\x1a\n\x16\x45SP32_TG0WDT_SYS_RESET\x10\x07\x12\x1a\n\x16\x45SP32_TG1WDT_SYS_RESET\x10\x08\x12\x1a\n\x16\x45SP32_RTCWDT_SYS_RESET\x10\t\x12\x19\n\x15\x45SP32_INTRUSION_RESET\x10\n\x12\x19\n\x15\x45SP32_TGWDT_CPU_RESET\x10\x0b\x12\x16\n\x12\x45SP32_SW_CPU_RESET\x10\x0c\x12\x1a\n\x16\x45SP32_RTCWDT_CPU_RESET\x10\r\x12\x17\n\x13\x45SP32_EXT_CPU_RESET\x10\x0e\x12 \n\x1c\x45SP32_RTCWDT_BROWN_OUT_RESET\x10\x0f\x12\x1a\n\x16\x45SP32_RTCWDT_RTC_RESET\x10\x10')
+  serialized_pb=_b('\n\x0ereticul8.proto\x1a\x0cnanopb.proto\"3\n\x0bGPIO_CONFIG\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x17\n\x04mode\x18\x02 \x02(\x0e\x32\t.PIN_MODE\"0\n\x0cGPIO_MONITOR\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x13\n\x0b\x64\x65\x62ounce_ms\x18\x02 \x02(\x07\"4\n\nGPIO_WRITE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x19\n\x05value\x18\x02 \x02(\x0e\x32\n.PIN_VALUE\"\x18\n\tGPIO_READ\x12\x0b\n\x03pin\x18\x01 \x02(\x07\"1\n\nOTA_UPDATE\x12\r\n\x05\x63hunk\x18\x01 \x02(\x07\x12\x14\n\x04\x64\x61ta\x18\x02 \x02(\x0c\x42\x06\x92?\x03\x08\xc0\x01\"\x19\n\nPWM_CONFIG\x12\x0b\n\x03pin\x18\x01 \x02(\x07\"\x17\n\x08PWM_STOP\x12\x0b\n\x03pin\x18\x01 \x02(\x07\"%\n\x08PWM_DUTY\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x0c\n\x04\x64uty\x18\x02 \x02(\x07\"6\n\x08PWM_FADE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x0c\n\x04\x64uty\x18\x02 \x02(\x07\x12\x0f\n\x07\x66\x61\x64\x65_ms\x18\x03 \x02(\x07\".\n\nI2C_CONFIG\x12\x0f\n\x07pin_sda\x18\x01 \x01(\x07\x12\x0f\n\x07pin_scl\x18\x02 \x01(\x07\"=\n\tI2C_WRITE\x12\x0e\n\x06\x64\x65vice\x18\x01 \x02(\x07\x12\x0b\n\x03len\x18\x03 \x02(\x07\x12\x13\n\x04\x64\x61ta\x18\x04 \x02(\x0c\x42\x05\x92?\x02\x08 \"8\n\x08I2C_READ\x12\x0e\n\x06\x64\x65vice\x18\x01 \x02(\x07\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x02(\x07\x12\x0b\n\x03len\x18\x03 \x02(\x07\"\x14\n\x04PING\x12\x0c\n\x04ping\x18\x01 \x02(\x08\"\x1a\n\x07SYSINFO\x12\x0f\n\x07sysinfo\x18\x01 \x02(\x08\"=\n\x08SCHEDULE\x12\r\n\x05\x63ount\x18\x01 \x02(\x0f\x12\x10\n\x08\x65very_ms\x18\x02 \x02(\x07\x12\x10\n\x08\x61\x66ter_ms\x18\x03 \x02(\x07\"\"\n\nRUN_NESTED\x12\x14\n\x04\x64\x61ta\x18\x03 \x02(\x0c\x42\x06\x92?\x03\x08\xc4\x01\"\xa5\x04\n\x03RPC\x12#\n\x0bgpio_config\x18\x01 \x01(\x0b\x32\x0c.GPIO_CONFIGH\x00\x12!\n\ngpio_write\x18\x02 \x01(\x0b\x32\x0b.GPIO_WRITEH\x00\x12\x1f\n\tgpio_read\x18\x03 \x01(\x0b\x32\n.GPIO_READH\x00\x12%\n\x0cgpio_monitor\x18\x04 \x01(\x0b\x32\r.GPIO_MONITORH\x00\x12!\n\npwm_config\x18\x05 \x01(\x0b\x32\x0b.PWM_CONFIGH\x00\x12\x1d\n\x08pwm_duty\x18\x06 \x01(\x0b\x32\t.PWM_DUTYH\x00\x12\x1d\n\x08pwm_fade\x18\x07 \x01(\x0b\x32\t.PWM_FADEH\x00\x12\x1d\n\x08pwm_stop\x18\x0f \x01(\x0b\x32\t.PWM_STOPH\x00\x12\x15\n\x04ping\x18\x08 \x01(\x0b\x32\x05.PINGH\x00\x12\x1b\n\x07sysinfo\x18\t \x01(\x0b\x32\x08.SYSINFOH\x00\x12!\n\ni2c_config\x18\n \x01(\x0b\x32\x0b.I2C_CONFIGH\x00\x12\x1f\n\ti2c_write\x18\x0b \x01(\x0b\x32\n.I2C_WRITEH\x00\x12\x1d\n\x08i2c_read\x18\x0c \x01(\x0b\x32\t.I2C_READH\x00\x12!\n\nota_update\x18\r \x01(\x0b\x32\x0b.OTA_UPDATEH\x00\x12\x1d\n\x06nested\x18\x0e \x01(\x0b\x32\x0b.RUN_NESTEDH\x00\x12\x0f\n\x06msg_id\x18\xc8\x01 \x02(\x07\x12\x1c\n\x08schedule\x18\xc9\x01 \x01(\x0b\x32\t.SCHEDULEB\x06\n\x04\x63\x61ll\"4\n\nPIN_CHANGE\x12\x0b\n\x03pin\x18\x01 \x02(\x07\x12\x19\n\x05value\x18\x02 \x02(\x0e\x32\n.PIN_VALUE\"Z\n\nRPC_RESULT\x12\x1c\n\x06result\x18\x01 \x02(\x0e\x32\x0c.RESULT_TYPE\x12\x1d\n\tpin_value\x18\x02 \x01(\x0e\x32\n.PIN_VALUE\x12\x0f\n\x06msg_id\x18\xc8\x01 \x02(\x07\"\xb8\x01\n\nFROM_MICRO\x12\x1d\n\x06result\x18\x01 \x01(\x0b\x32\x0b.RPC_RESULTH\x00\x12!\n\npin_change\x18\x02 \x01(\x0b\x32\x0b.PIN_CHANGEH\x00\x12\"\n\x07startup\x18\x03 \x01(\x0e\x32\x0f.STARTUP_REASONH\x00\x12\x15\n\x03raw\x18\xc8\x01 \x01(\x0c\x42\x05\x92?\x02\x08@H\x01\x12\x1e\n\x13schedules_remaining\x18\xc9\x01 \x01(\x07H\x01\x42\x05\n\x03msgB\x06\n\x04\x64\x61ta*E\n\x08PIN_MODE\x12\x13\n\x0fPM_INPUT_PULLUP\x10\x01\x12\x15\n\x11PM_INPUT_PULLDOWN\x10\x02\x12\r\n\tPM_OUTPUT\x10\x03*$\n\tPIN_VALUE\x12\n\n\x06PV_LOW\x10\x00\x12\x0b\n\x07PV_HIGH\x10\x01*;\n\x0bRESULT_TYPE\x12\x0e\n\nRT_UNKNOWN\x10\x01\x12\x0e\n\nRT_SUCCESS\x10\x02\x12\x0c\n\x08RT_ERROR\x10\x03*\xa9\x03\n\x0eSTARTUP_REASON\x12\x0e\n\nSR_UNKNOWN\x10\x01\x12\x17\n\x13\x45SP32_POWERON_RESET\x10\x02\x12\x12\n\x0e\x45SP32_SW_RESET\x10\x03\x12\x14\n\x10\x45SP32_OWDT_RESET\x10\x04\x12\x19\n\x15\x45SP32_DEEPSLEEP_RESET\x10\x05\x12\x14\n\x10\x45SP32_SDIO_RESET\x10\x06\x12\x1a\n\x16\x45SP32_TG0WDT_SYS_RESET\x10\x07\x12\x1a\n\x16\x45SP32_TG1WDT_SYS_RESET\x10\x08\x12\x1a\n\x16\x45SP32_RTCWDT_SYS_RESET\x10\t\x12\x19\n\x15\x45SP32_INTRUSION_RESET\x10\n\x12\x19\n\x15\x45SP32_TGWDT_CPU_RESET\x10\x0b\x12\x16\n\x12\x45SP32_SW_CPU_RESET\x10\x0c\x12\x1a\n\x16\x45SP32_RTCWDT_CPU_RESET\x10\r\x12\x17\n\x13\x45SP32_EXT_CPU_RESET\x10\x0e\x12 \n\x1c\x45SP32_RTCWDT_BROWN_OUT_RESET\x10\x0f\x12\x1a\n\x16\x45SP32_RTCWDT_RTC_RESET\x10\x10')
   ,
   dependencies=[nanopb__pb2.DESCRIPTOR,])
 
@@ -46,8 +46,8 @@ _PIN_MODE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1560,
-  serialized_end=1629,
+  serialized_start=1616,
+  serialized_end=1685,
 )
 _sym_db.RegisterEnumDescriptor(_PIN_MODE)
 
@@ -69,8 +69,8 @@ _PIN_VALUE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1631,
-  serialized_end=1667,
+  serialized_start=1687,
+  serialized_end=1723,
 )
 _sym_db.RegisterEnumDescriptor(_PIN_VALUE)
 
@@ -96,8 +96,8 @@ _RESULT_TYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1669,
-  serialized_end=1728,
+  serialized_start=1725,
+  serialized_end=1784,
 )
 _sym_db.RegisterEnumDescriptor(_RESULT_TYPE)
 
@@ -175,8 +175,8 @@ _STARTUP_REASON = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1731,
-  serialized_end=2156,
+  serialized_start=1787,
+  serialized_end=2212,
 )
 _sym_db.RegisterEnumDescriptor(_STARTUP_REASON)
 
@@ -422,6 +422,37 @@ _PWM_CONFIG = _descriptor.Descriptor(
 )
 
 
+_PWM_STOP = _descriptor.Descriptor(
+  name='PWM_STOP',
+  full_name='PWM_STOP',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='pin', full_name='PWM_STOP.pin', index=0,
+      number=1, type=7, cpp_type=3, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=293,
+  serialized_end=316,
+)
+
+
 _PWM_DUTY = _descriptor.Descriptor(
   name='PWM_DUTY',
   full_name='PWM_DUTY',
@@ -455,8 +486,8 @@ _PWM_DUTY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=293,
-  serialized_end=330,
+  serialized_start=318,
+  serialized_end=355,
 )
 
 
@@ -500,8 +531,8 @@ _PWM_FADE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=332,
-  serialized_end=386,
+  serialized_start=357,
+  serialized_end=411,
 )
 
 
@@ -538,8 +569,8 @@ _I2C_CONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=388,
-  serialized_end=434,
+  serialized_start=413,
+  serialized_end=459,
 )
 
 
@@ -583,8 +614,8 @@ _I2C_WRITE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=436,
-  serialized_end=497,
+  serialized_start=461,
+  serialized_end=522,
 )
 
 
@@ -628,8 +659,8 @@ _I2C_READ = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=499,
-  serialized_end=555,
+  serialized_start=524,
+  serialized_end=580,
 )
 
 
@@ -659,8 +690,8 @@ _PING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=557,
-  serialized_end=577,
+  serialized_start=582,
+  serialized_end=602,
 )
 
 
@@ -690,8 +721,8 @@ _SYSINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=579,
-  serialized_end=605,
+  serialized_start=604,
+  serialized_end=630,
 )
 
 
@@ -735,8 +766,8 @@ _SCHEDULE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=607,
-  serialized_end=668,
+  serialized_start=632,
+  serialized_end=693,
 )
 
 
@@ -766,8 +797,8 @@ _RUN_NESTED = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=670,
-  serialized_end=704,
+  serialized_start=695,
+  serialized_end=729,
 )
 
 
@@ -828,63 +859,70 @@ _RPC = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='ping', full_name='RPC.ping', index=7,
+      name='pwm_stop', full_name='RPC.pwm_stop', index=7,
+      number=15, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ping', full_name='RPC.ping', index=8,
       number=8, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='sysinfo', full_name='RPC.sysinfo', index=8,
+      name='sysinfo', full_name='RPC.sysinfo', index=9,
       number=9, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='i2c_config', full_name='RPC.i2c_config', index=9,
+      name='i2c_config', full_name='RPC.i2c_config', index=10,
       number=10, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='i2c_write', full_name='RPC.i2c_write', index=10,
+      name='i2c_write', full_name='RPC.i2c_write', index=11,
       number=11, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='i2c_read', full_name='RPC.i2c_read', index=11,
+      name='i2c_read', full_name='RPC.i2c_read', index=12,
       number=12, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='ota_update', full_name='RPC.ota_update', index=12,
+      name='ota_update', full_name='RPC.ota_update', index=13,
       number=13, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='nested', full_name='RPC.nested', index=13,
+      name='nested', full_name='RPC.nested', index=14,
       number=14, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='msg_id', full_name='RPC.msg_id', index=14,
+      name='msg_id', full_name='RPC.msg_id', index=15,
       number=200, type=7, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='schedule', full_name='RPC.schedule', index=15,
+      name='schedule', full_name='RPC.schedule', index=16,
       number=201, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -905,8 +943,8 @@ _RPC = _descriptor.Descriptor(
       name='call', full_name='RPC.call',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=707,
-  serialized_end=1225,
+  serialized_start=732,
+  serialized_end=1281,
 )
 
 
@@ -943,8 +981,8 @@ _PIN_CHANGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1227,
-  serialized_end=1279,
+  serialized_start=1283,
+  serialized_end=1335,
 )
 
 
@@ -988,8 +1026,8 @@ _RPC_RESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1281,
-  serialized_end=1371,
+  serialized_start=1337,
+  serialized_end=1427,
 )
 
 
@@ -1053,8 +1091,8 @@ _FROM_MICRO = _descriptor.Descriptor(
       name='data', full_name='FROM_MICRO.data',
       index=1, containing_type=None, fields=[]),
   ],
-  serialized_start=1374,
-  serialized_end=1558,
+  serialized_start=1430,
+  serialized_end=1614,
 )
 
 _GPIO_CONFIG.fields_by_name['mode'].enum_type = _PIN_MODE
@@ -1066,6 +1104,7 @@ _RPC.fields_by_name['gpio_monitor'].message_type = _GPIO_MONITOR
 _RPC.fields_by_name['pwm_config'].message_type = _PWM_CONFIG
 _RPC.fields_by_name['pwm_duty'].message_type = _PWM_DUTY
 _RPC.fields_by_name['pwm_fade'].message_type = _PWM_FADE
+_RPC.fields_by_name['pwm_stop'].message_type = _PWM_STOP
 _RPC.fields_by_name['ping'].message_type = _PING
 _RPC.fields_by_name['sysinfo'].message_type = _SYSINFO
 _RPC.fields_by_name['i2c_config'].message_type = _I2C_CONFIG
@@ -1095,6 +1134,9 @@ _RPC.fields_by_name['pwm_duty'].containing_oneof = _RPC.oneofs_by_name['call']
 _RPC.oneofs_by_name['call'].fields.append(
   _RPC.fields_by_name['pwm_fade'])
 _RPC.fields_by_name['pwm_fade'].containing_oneof = _RPC.oneofs_by_name['call']
+_RPC.oneofs_by_name['call'].fields.append(
+  _RPC.fields_by_name['pwm_stop'])
+_RPC.fields_by_name['pwm_stop'].containing_oneof = _RPC.oneofs_by_name['call']
 _RPC.oneofs_by_name['call'].fields.append(
   _RPC.fields_by_name['ping'])
 _RPC.fields_by_name['ping'].containing_oneof = _RPC.oneofs_by_name['call']
@@ -1143,6 +1185,7 @@ DESCRIPTOR.message_types_by_name['GPIO_WRITE'] = _GPIO_WRITE
 DESCRIPTOR.message_types_by_name['GPIO_READ'] = _GPIO_READ
 DESCRIPTOR.message_types_by_name['OTA_UPDATE'] = _OTA_UPDATE
 DESCRIPTOR.message_types_by_name['PWM_CONFIG'] = _PWM_CONFIG
+DESCRIPTOR.message_types_by_name['PWM_STOP'] = _PWM_STOP
 DESCRIPTOR.message_types_by_name['PWM_DUTY'] = _PWM_DUTY
 DESCRIPTOR.message_types_by_name['PWM_FADE'] = _PWM_FADE
 DESCRIPTOR.message_types_by_name['I2C_CONFIG'] = _I2C_CONFIG
@@ -1203,6 +1246,13 @@ PWM_CONFIG = _reflection.GeneratedProtocolMessageType('PWM_CONFIG', (_message.Me
   # @@protoc_insertion_point(class_scope:PWM_CONFIG)
   ))
 _sym_db.RegisterMessage(PWM_CONFIG)
+
+PWM_STOP = _reflection.GeneratedProtocolMessageType('PWM_STOP', (_message.Message,), dict(
+  DESCRIPTOR = _PWM_STOP,
+  __module__ = 'reticul8_pb2'
+  # @@protoc_insertion_point(class_scope:PWM_STOP)
+  ))
+_sym_db.RegisterMessage(PWM_STOP)
 
 PWM_DUTY = _reflection.GeneratedProtocolMessageType('PWM_DUTY', (_message.Message,), dict(
   DESCRIPTOR = _PWM_DUTY,

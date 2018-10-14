@@ -42,6 +42,10 @@ message PWM_CONFIG {
     required fixed32 pin =1;
 }
 
+message PWM_STOP {
+    required fixed32 pin =1;
+}
+
 // Max duty is 8192
 
 message PWM_DUTY {
@@ -100,6 +104,7 @@ message RPC {
         PWM_CONFIG pwm_config = 5;
         PWM_DUTY pwm_duty = 6;
         PWM_FADE pwm_fade = 7;
+        PWM_STOP pwm_stop = 15;
 
         PING ping = 8;
         SYSINFO sysinfo = 9;

@@ -113,6 +113,8 @@ public:
     bool setup_ledc_channel(uint8_t pin);
     bool set_ledc_duty(uint8_t pin, uint32_t duty);
     bool set_ledc_fade(uint8_t pin, uint32_t duty, uint32_t fade_ms);
+    bool stop_ledc_channel(uint8_t pin);
+    bool check_if_pin_is_ledc_channel(uint8_t pin);
 #endif
 
 
