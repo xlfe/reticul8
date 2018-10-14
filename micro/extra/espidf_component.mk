@@ -1,3 +1,7 @@
+SHELL := /bin/bash
+
+CPPFLAGS += -D"__COMPILE_TIME__ =`date '+%s'`"
+
 RETICUL8_DIR := $(PROJECT_PATH)/components/reticul8
 NANOPB_DIR := $(RETICUL8_DIR)/nanopb
 PGEN_DIR := $(NANOPB_DIR)/generator/proto

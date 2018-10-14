@@ -207,6 +207,19 @@ void RETICUL8::begin(){
             case NO_MEAN: break;
         }
     }
+
+    m.which_data = FROM_MICRO_raw_tag;
+    memcpy(m.data.raw.bytes, &this->BUILD, sizeof(this->BUILD));
+    m.data.raw.size = sizeof(this->BUILD);
+
+    /*
+        uint8_t sha_256[32] = { 0 };
+        m.which_data = FROM_MICRO_raw_tag;
+        esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256);
+        memcpy(m.data.raw.bytes, sha_256, 32);
+        m.data.raw.size = 32;
+    */
+
 #endif
 
     this->notify_event(&m);
@@ -730,6 +743,48 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
                 }
             }
             break;
+
+
+#ifdef ESP32
+        case (RPC_ota_update_tag):
+        {
+
+            if (update_handle == NULL && update_partition == NULL && update_chunk == 0) {
+
+                update_partition = esp_ota_get_next_update_partition(NULL);
+                if (update_partition == NULL) {
+                    break;
+                }
+
+                if (request->call.ota_update.chunk == 0 &&
+                        esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle) == ESP_OK) {
+
+                    if  (esp_ota_write( update_handle, (const void *)request->call.ota_update.data.bytes, request->call.ota_update.data.size) == ESP_OK) {
+                        m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        update_chunk = 1;
+                    }
+
+
+                }
+            } else if (update_chunk == request->call.ota_update.chunk) {
+
+                if  (esp_ota_write( update_handle, (const void *)request->call.ota_update.data.bytes, request->call.ota_update.data.size) == ESP_OK) {
+                    m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                    update_chunk += 1;
+                }
+
+            } else if (update_chunk == 0) {
+                if (esp_ota_end(update_handle) == ESP_OK &&
+                    esp_ota_set_boot_partition(update_partition) == ESP_OK){
+                    m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                }
+            }
+
+        }
+        case (RPC_reboot_tag): {
+            esp_restart();
+        }
+#endif
 
         default:
             m->msg.result.result = RESULT_TYPE_RT_UNKNOWN;

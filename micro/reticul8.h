@@ -23,6 +23,11 @@
 
 #ifdef ESP32
 
+
+#include "esp_ota_ops.h"
+
+
+
 #define LEDC_NOT_IN_USE 0
 #define LEDC_IN_USE 1
 
@@ -85,6 +90,8 @@ public:
     void begin();
     void r8_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info);
 
+    uint32_t BUILD = __COMPILE_TIME__;
+
     PJON <Any> *get_bus(uint8_t idx);
 
     uint16_t get_device_bus(uint8_t device_id);
@@ -133,12 +140,17 @@ public:
     bool add_scheduled_command(uint8_t *payload, uint16_t length);
 
 
+#ifdef ESP32
+    esp_ota_handle_t update_handle = 0 ;
+    const esp_partition_t *update_partition = NULL;
+    uint32_t update_chunk = 0;
+#endif
+
+
+
 };
 
 struct BUS_DETAILS {
     RETICUL8 *r8;
     uint8_t bus_idx;
 };
-
-void blink(uint8_t count=1);
-

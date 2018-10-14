@@ -89,6 +89,8 @@ class TSA_Node(rpc.Node):
                 await digitalWrite(22, LOW)
                 await sleep(.1)
 
+            await esp32_reboot()
+
             await pinMode(19, INPUT_PULLUP)
             assert await digitalRead(19) == HIGH
 

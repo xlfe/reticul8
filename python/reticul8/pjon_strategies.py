@@ -1,4 +1,5 @@
 import uvloop
+import struct
 import pjon_cython
 import time
 import random
@@ -15,6 +16,9 @@ import os
 LOOP_SLEEP = 0.0001
 
 
+def decode_build_time(data):
+    (build_time,)= struct.unpack('<I', data)
+    return datetime.datetime.utcfromtimestamp(build_time)
 
 
 class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
@@ -141,13 +145,17 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
 
         if packet.WhichOneof('msg') == 'startup':
-            logging.debug("{} startup".format(source))
-            if node.startup is None:
-                node.startup = datetime.datetime.now()
-                asyncio.ensure_future(node.notify_startup())
-                # self.rpc.ping()
-                # asyncio.get_event_loop().call_later(0.01, self.setup_led)
-                # asyncio.get_event_loop().call_later(0.02, self.cmd_schedule)
+            logging.debug("{} startup {}".format(source, str(packet).replace('\n',' ')))
+
+            if node.startup is not None:
+
+                if node.startup_task and not node.startup_task.cancelled():
+                    node.startup_task.cancel()
+
+            node.startup = datetime.datetime.now()
+            node.built = decode_build_time(packet.raw)
+            logging.info('Node built: {}'.format(node.built))
+            node.startup_task = asyncio.ensure_future(node.notify_startup())
 
         elif packet.WhichOneof('msg') == 'result':
 

@@ -54,6 +54,9 @@ async def i2c_write(device, data):
 async def ota_test():
     return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=random.randint(0,1000000), data=192*b'd')))
 
+async def esp32_reboot():
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().reboot()))
+
 
 
 def blah(self):
