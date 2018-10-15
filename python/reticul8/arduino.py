@@ -59,26 +59,6 @@ async def esp32_reboot():
 
 
 
-def blah(self):
-    rpc = r8.RPC()
-
-    rpc.hasField(args[0])
-
-    if LARGE_PING:
-        rpc.ota_update.data = b'F'*192
-        rpc.ota_update.chunk = 0
-    else:
-        rpc.ping.ping = True
-    self.send_packet(rpc)
-
-
-
-        # led = r8.RPC()
-        # led.gpio_write.pin = 22
-        # led.gpio_write.mode = r8.PV_LOW
-        # self.sendp(led)
-
-
 def cmd_schedule(self):
     s1 = r8.RPC()
     s1.schedule.count = -1

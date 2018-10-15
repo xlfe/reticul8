@@ -24,7 +24,9 @@
 #ifdef ESP32
 
 
+#define DECOMP_SIZE (192*16)
 #include "esp_ota_ops.h"
+#include "rom/miniz.h"
 
 
 
@@ -141,9 +143,21 @@ public:
 
 
 #ifdef ESP32
+    bool update_in_progress = false;
     esp_ota_handle_t update_handle = 0 ;
     const esp_partition_t *update_partition = NULL;
     uint32_t update_chunk = 0;
+
+
+    /*
+    tinfl_decompressor *decomp = NULL;
+    char *outbuf;
+    tdefl_status status;
+    size_t inbytes = 0, outbytes = 0, inpos = 0, outpos = 0, compsz;
+     */
+
+
+
 #endif
 
 
@@ -154,3 +168,7 @@ struct BUS_DETAILS {
     RETICUL8 *r8;
     uint8_t bus_idx;
 };
+
+
+
+void blink(uint8_t count);

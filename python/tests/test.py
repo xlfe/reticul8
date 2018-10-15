@@ -68,11 +68,46 @@ class ESP_Node(rpc.Node):
                 await PWM_fade(22, 8192, 500)
                 await sleep(1)
 
+OTA_UPDATE_SIZE = 192
+
+async def ota_update(node, filename):
+    chunk = 0
+
+    original_timeout = node.transport.TIMEOUT_US
+    # first packet takes > 800ms
+    node.transport.TIMEOUT_US = 15 * 100000
+
+    with open(filename, 'rb') as rom:
+
+        with node:
+
+            logging.debug('Starting update')
+
+            chunk_data = rom.read(192)
+            while len(chunk_data):
+
+                logging.info('Sending chunk {} ({:,} total sent)'.format(chunk, chunk*192))
+                assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=chunk, data=chunk_data)))
+                chunk_data = rom.read(192)
+                chunk += 1
+
+            logging.info('Finalizing update')
+            assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=0, data=bytes([0]))))
+            logging.info('Done!')
+
+    node.transport.TIMEOUT_US = original_timeout
+
+
+
+
+from os import path
 
 class TSA_Node(rpc.Node):
 
     async def notify_startup(self):
         print("startup from {}!".format(self.device_id))
+        await ota_update(self, os.path.join(path.expanduser('~'), 'esp/xha_32/build/reticul8_esp32.bin'))
+        return
         if False:
             other = self.transport.nodes[12]
             other.startup = datetime.datetime.now()
@@ -130,7 +165,7 @@ class ESPTSA(pjon_strategies.SerialAsyncio):
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 loop = asyncio.get_event_loop()
 loop.set_debug(True)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 UART_PORT = [
     '/dev/ttyUSB0',

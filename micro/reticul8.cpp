@@ -749,41 +749,83 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
         case (RPC_ota_update_tag):
         {
 
-            if (update_handle == NULL && update_partition == NULL && update_chunk == 0) {
+            if (update_in_progress) {
+
+                if (update_chunk == request->call.ota_update.chunk) {
+
+                    //Another chunk
+                    if  (esp_ota_write( update_handle, (const void *)request->call.ota_update.data.bytes, request->call.ota_update.data.size) == ESP_OK) {
+                        m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                        update_chunk += 1;
+                    }
+                } else if (request->call.ota_update.chunk == 0) {
+
+                    //Finish update (no data)
+                    if (esp_ota_end(update_handle) == ESP_OK) {
+
+                        if (esp_ota_set_boot_partition(update_partition) == ESP_OK) {
+                            m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                            update_in_progress = false;
+                        }
+                    }
+
+                }
+
+            } else {
+
+                //start an ota update
+/*
+                outbuf = malloc(DATASIZE);
+                if (outbuf == NULL) {
+                    break;
+                }
+
+                decomp = malloc(sizeof(tinfl_decompressor));
+
+                if (decomp == NULL){
+                    free(outbuf);
+                    break
+                }
+
+                tinfl_init(decomp);
+
+                tinfl_decompress(
+                        decomp,
+                        (const mz_uint8 *)&inbuf[inpos],
+                        &inbytes,
+                        (uint8_t *)outbuf,
+                        (mz_uint8 *)&outbuf[outpos],
+                        &outbytes,
+                        TINFL_FLAG_PARSE_ZLIB_HEADER);
+*/
 
                 update_partition = esp_ota_get_next_update_partition(NULL);
+
                 if (update_partition == NULL) {
+//                    free(decomp);
+//                    free(outbuf);
                     break;
                 }
 
                 if (request->call.ota_update.chunk == 0 &&
-                        esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle) == ESP_OK) {
+                    esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle) == ESP_OK) {
 
-                    if  (esp_ota_write( update_handle, (const void *)request->call.ota_update.data.bytes, request->call.ota_update.data.size) == ESP_OK) {
+                    if (esp_ota_write(update_handle, (const void *) request->call.ota_update.data.bytes,
+                                      request->call.ota_update.data.size) == ESP_OK) {
                         m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
                         update_chunk = 1;
+                        update_in_progress = true;
                     }
-
-
-                }
-            } else if (update_chunk == request->call.ota_update.chunk) {
-
-                if  (esp_ota_write( update_handle, (const void *)request->call.ota_update.data.bytes, request->call.ota_update.data.size) == ESP_OK) {
-                    m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                    update_chunk += 1;
-                }
-
-            } else if (update_chunk == 0) {
-                if (esp_ota_end(update_handle) == ESP_OK &&
-                    esp_ota_set_boot_partition(update_partition) == ESP_OK){
-                    m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
                 }
             }
 
         }
+        break;
+
         case (RPC_reboot_tag): {
             esp_restart();
         }
+        break;
 #endif
 
         default:
