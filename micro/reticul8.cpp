@@ -748,74 +748,145 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
 #ifdef ESP32
         case (RPC_ota_update_tag):
         {
+            decomp_inbuf_len = request->call.ota_update.data.size;
+            decomp_outbuf_len = DECOMP_SIZE;
 
             if (update_in_progress) {
 
                 if (update_chunk == request->call.ota_update.chunk) {
 
                     //Another chunk
-                    if  (esp_ota_write( update_handle, (const void *)request->call.ota_update.data.bytes, request->call.ota_update.data.size) == ESP_OK) {
-                        m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        update_chunk += 1;
-                    }
-                } else if (request->call.ota_update.chunk == 0) {
 
-                    //Finish update (no data)
-                    if (esp_ota_end(update_handle) == ESP_OK) {
+                    if ((decomp_status = tinfl_decompress(decomp,
+                                         (const mz_uint8 *)request->call.ota_update.data.bytes,
+                                         &decomp_inbuf_len,
+                                         (mz_uint8 *)decomp_outbuf,
+                                         (mz_uint8 *)decomp_outbuf,
+                                         &decomp_outbuf_len,
+                                         TINFL_FLAG_HAS_MORE_INPUT )) == TINFL_STATUS_NEEDS_MORE_INPUT) {
 
-                        if (esp_ota_set_boot_partition(update_partition) == ESP_OK) {
+                        if (esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len) == ESP_OK) {
                             m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                            update_in_progress = false;
+                            update_chunk += 1;
+                        }
+                    } else {
+
+                        switch (decomp_status) {
+
+//                            case TINFL_STATUS_FAILED_CANNOT_MAKE_PROGRESS:
+//                                blink(1); break;
+                            case TINFL_STATUS_BAD_PARAM:
+                                blink(2); break;
+                            case TINFL_STATUS_ADLER32_MISMATCH:
+                                blink(3); break;
+                            case TINFL_STATUS_FAILED:
+                                blink(4); break;
+                            case TINFL_STATUS_DONE:
+                                blink(5); break;
+                            case TINFL_STATUS_NEEDS_MORE_INPUT:
+                                blink(6); break;
+                            case TINFL_STATUS_HAS_MORE_OUTPUT:
+                                blink(7); break;
                         }
                     }
 
+                } else if (request->call.ota_update.chunk == 0) {
+
+                    //Finish update (last chunk)
+                    //2018-10-16 12:00:03
+                    //
+
+
+                    if (tinfl_decompress(decomp,
+                                         (const mz_uint8 *)request->call.ota_update.data.bytes,
+                                         &decomp_inbuf_len,
+                                         (mz_uint8 *)decomp_outbuf,
+                                         (mz_uint8 *)decomp_outbuf,
+                                         &decomp_outbuf_len,
+                                         0) == TINFL_STATUS_DONE) {
+
+                        if (esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len) == ESP_OK) {
+                            if (esp_ota_end(update_handle) == ESP_OK) {
+
+                                if (esp_ota_set_boot_partition(update_partition) == ESP_OK) {
+                                    m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                                    update_in_progress = false;
+                                }
+                            }
+                        }
+                    }
                 }
 
             } else {
 
                 //start an ota update
-/*
-                outbuf = malloc(DATASIZE);
-                if (outbuf == NULL) {
+
+                decomp_outbuf = (char*)malloc(DECOMP_SIZE);
+                if (decomp_outbuf == NULL) {
                     break;
                 }
 
-                decomp = malloc(sizeof(tinfl_decompressor));
+                decomp = (tinfl_decompressor*)malloc(sizeof(tinfl_decompressor));
 
                 if (decomp == NULL){
-                    free(outbuf);
-                    break
+                    free(decomp_outbuf);
+                    break;
                 }
 
                 tinfl_init(decomp);
 
-                tinfl_decompress(
-                        decomp,
-                        (const mz_uint8 *)&inbuf[inpos],
-                        &inbytes,
-                        (uint8_t *)outbuf,
-                        (mz_uint8 *)&outbuf[outpos],
-                        &outbytes,
-                        TINFL_FLAG_PARSE_ZLIB_HEADER);
-*/
-
                 update_partition = esp_ota_get_next_update_partition(NULL);
 
                 if (update_partition == NULL) {
-//                    free(decomp);
-//                    free(outbuf);
+                    free(decomp_outbuf);
+                    free(decomp);
                     break;
                 }
 
                 if (request->call.ota_update.chunk == 0 &&
                     esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle) == ESP_OK) {
 
-                    if (esp_ota_write(update_handle, (const void *) request->call.ota_update.data.bytes,
-                                      request->call.ota_update.data.size) == ESP_OK) {
-                        m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                        update_chunk = 1;
-                        update_in_progress = true;
+                    if ((decomp_status = tinfl_decompress(decomp,
+                            (const mz_uint8 *)request->call.ota_update.data.bytes,
+                            &decomp_inbuf_len,
+                            (mz_uint8 *)decomp_outbuf,
+                            (mz_uint8 *)decomp_outbuf,
+                            &decomp_outbuf_len,
+                            TINFL_FLAG_HAS_MORE_INPUT )) == TINFL_STATUS_NEEDS_MORE_INPUT) {
+
+                        if (esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len) == ESP_OK) {
+                            m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                            update_chunk = 1;
+                            update_in_progress = true;
+                        }
+                    } else {
+
+                        switch (decomp_status) {
+
+//                            case TINFL_STATUS_FAILED_CANNOT_MAKE_PROGRESS:
+//                                blink(1); break;
+                            case TINFL_STATUS_BAD_PARAM:
+                                blink(2);
+                                break;
+                            case TINFL_STATUS_ADLER32_MISMATCH:
+                                blink(3);
+                                break;
+                            case TINFL_STATUS_FAILED:
+                                blink(4);
+                                break;
+                            case TINFL_STATUS_DONE:
+                                blink(5);
+                                break;
+                            case TINFL_STATUS_NEEDS_MORE_INPUT:
+                                blink(6);
+                                break;
+                            case TINFL_STATUS_HAS_MORE_OUTPUT:
+                                blink(7);
+                                break;
+                        }
                     }
+                } else {
+                    blink(8);
                 }
             }
 

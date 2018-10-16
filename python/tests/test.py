@@ -69,6 +69,75 @@ class ESP_Node(rpc.Node):
                 await sleep(1)
 
 OTA_UPDATE_SIZE = 192
+COMPRESS_CHUNKS = 16
+import zlib
+import io
+
+class block_compressor(object):
+
+    def __init__(self, in_bytes, block_size):
+
+        self.c = zlib.compressobj(zlib.Z_BEST_COMPRESSION, zlib.DEFLATED, -15)
+        self.bs = block_size
+        self.input = in_bytes.read()
+        self.pos = 0
+
+    def blocks(self):
+        while True:
+            next = self.next_block()
+            if next is None:
+                raise GeneratorExit()
+            yield next
+
+    def next_block(self):
+
+        if self.pos == len(self.input):
+            return None
+
+        size = self.bs * 20
+
+        if size > self.pos + len(self.input):
+            size = len(self.input) - self.pos
+
+        while True:
+            last_c, last_d = self.compress_next_chunk(size)
+
+            diff = len(last_d) - self.bs
+
+            if diff == 0:
+                self.c = last_c
+                self.pos += size
+                return size, last_d
+            elif diff < 0:
+                #block is too small
+                size += 1
+
+
+            else:
+                #block is too big
+                size -= 1
+
+            if size == 0:
+                return None
+
+
+
+    def get_input(self, size):
+        assert self.pos + size < len(self.input)
+        return self.input[self.pos:self.pos + size]
+
+    def compress_next_chunk(self, size):
+
+        data = self.get_input(size)
+        c = self.c.copy()
+        # return c, c.compress(data) + c.flush(zlib.Z_FULL_FLUSH)
+        return c, c.compress(data) + c.flush(zlib.Z_SYNC_FLUSH)
+
+
+
+
+
+
 
 async def ota_update(node, filename):
     chunk = 0
@@ -79,20 +148,27 @@ async def ota_update(node, filename):
 
     with open(filename, 'rb') as rom:
 
+
+        blocks = block_compressor(rom, OTA_UPDATE_SIZE)
+
+        # compress = zlib.compressobj(zlib.Z_BEST_COMPRESSION, zlib.DEFLATED, -15)
+        # compressed = compress.compress(rom.read()) + compress.flush()
+        # compressed = zlib.compress(rom.read(), 2)
+        # total = len(compressed)
+        # rom = io.BytesIO(compressed)
+
         with node:
 
             logging.debug('Starting update')
 
-            chunk_data = rom.read(192)
-            while len(chunk_data):
+            for size, block in blocks.blocks():
 
-                logging.info('Sending chunk {} ({:,} total sent)'.format(chunk, chunk*192))
-                assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=chunk, data=chunk_data)))
-                chunk_data = rom.read(192)
+                logging.info('Sending chunk {:>5,} - size {} <- {}'.format(chunk, size, len(block)))
+                assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=chunk, data=block)))
                 chunk += 1
 
             logging.info('Finalizing update')
-            assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=0, data=bytes([0]))))
+            assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=0, data='')))
             logging.info('Done!')
 
     node.transport.TIMEOUT_US = original_timeout
@@ -165,7 +241,7 @@ class ESPTSA(pjon_strategies.SerialAsyncio):
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 loop = asyncio.get_event_loop()
 loop.set_debug(True)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 UART_PORT = [
     '/dev/ttyUSB0',

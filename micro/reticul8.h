@@ -24,7 +24,7 @@
 #ifdef ESP32
 
 
-#define DECOMP_SIZE (192*16)
+#define DECOMP_SIZE (2048)
 #include "esp_ota_ops.h"
 #include "rom/miniz.h"
 
@@ -149,12 +149,10 @@ public:
     uint32_t update_chunk = 0;
 
 
-    /*
     tinfl_decompressor *decomp = NULL;
-    char *outbuf;
-    tdefl_status status;
-    size_t inbytes = 0, outbytes = 0, inpos = 0, outpos = 0, compsz;
-     */
+    char *decomp_outbuf;
+    tinfl_status decomp_status;
+    size_t decomp_inbytes=0, decomp_outbuf_len=0, decomp_inbuf_len=0, decomp_outbytes = 0;
 
 
 
