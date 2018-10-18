@@ -595,7 +595,104 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
     this->notify_event(&m);
 }
 
+//bool RETICUL8::r8_inflate_init(Bytef * source) {
+bool RETICUL8::r8_inflate_init() {
+
+//    stream.next_in = (Bytef *)source;
+    stream.avail_in = 0;
+    stream.zalloc = (alloc_func)0;
+    stream.zfree = (free_func)0;
+    stream.opaque = (voidpf)0;
+
+    int err= inflateInit(&stream);
+
+    if (err != Z_OK) {
+
+        switch (err){
+            case Z_MEM_ERROR:
+                ESP_LOGD("Inflate_Init","MEM_ERROR"); break;
+            case Z_VERSION_ERROR:
+                ESP_LOGD("Inflate_Init","VERSION_ERROR"); break;
+            case Z_STREAM_ERROR:
+                ESP_LOGD("Inflate_Init","STREAM_ERROR"); break;
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool RETICUL8::r8_inflate(Bytef *dest, uLongf *destLen, const Bytef *source, uLong *sourceLen, bool more) {
+
+    uLong len, left, start;
+    int err;
+
+    if (*destLen == 0) {
+        return Z_BUF_ERROR;
+    }
+
+    len = *sourceLen;
+    left = *destLen;
+    start = stream.total_out;
+    *destLen = 0;
+
+    stream.next_in = (Bytef*)source;
+    stream.next_out = dest;
+    stream.avail_out = 0;
+
+    do {
+        if (stream.avail_out == 0) {
+            stream.avail_out = left;
+            left -= stream.avail_out;
+        }
+        if (stream.avail_in == 0) {
+            stream.avail_in = len;
+            len -= stream.avail_in;
+        }
+        err = inflate(&stream, more ? Z_SYNC_FLUSH : Z_FINISH);
+    } while (err == Z_OK);
+
+    *sourceLen -= len + stream.avail_in;
+    *destLen = stream.total_out - start;
+
+    if (more) {
+
+        switch (err) {
+            case Z_OK:
+                ESP_LOGD("INFLATE", "Z_OK"); break;
+            case Z_STREAM_END:
+                ESP_LOGD("INFLATE", "STREAM_END"); break;
+            case Z_NEED_DICT:
+                ESP_LOGD("INFLATE", "NEED_DICT"); break;
+            case Z_ERRNO:
+                ESP_LOGD("INFLATE", "ERRNO"); break;
+            case Z_STREAM_ERROR:
+                ESP_LOGD("INFLATE", "STREAM_ERROR"); break;
+            case Z_DATA_ERROR:
+                ESP_LOGD("INFLATE", "%s", stream.msg);
+                ESP_LOGD("INFLATE", "DATA_ERROR"); break;
+            case Z_MEM_ERROR:
+                ESP_LOGD("INFLATE", "MEM_ERROR"); break;
+            case Z_BUF_ERROR:
+                ESP_LOGD("INFLATE", "BUF_ERROR"); break;
+            case Z_VERSION_ERROR:
+                ESP_LOGD("INFLATE", "VERSION_ERROR"); break;
+        }
+
+        return err == Z_BUF_ERROR;
+    } else {
+        inflateEnd(&stream);
+        return err == Z_STREAM_END;
+    }
+
+}
+
 void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
+#ifdef ESP32
+    _ret = ESP_OK;
+#endif
 
     switch (request->which_call) {
         case (RPC_gpio_config_tag):
@@ -750,90 +847,146 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
         {
             decomp_inbuf_len = request->call.ota_update.data.size;
             decomp_outbuf_len = DECOMP_SIZE;
+            if (decomp_outbuf != NULL) {
+                memset((void*)decomp_outbuf, 0x00, DECOMP_SIZE);
+            }
 
             if (update_in_progress) {
+                //2018-10-18 23:20:26
 
                 if (update_chunk == request->call.ota_update.chunk) {
 
                     //Another chunk
 
-                    if ((decomp_status = tinfl_decompress(decomp,
-                                         (const mz_uint8 *)request->call.ota_update.data.bytes,
-                                         &decomp_inbuf_len,
-                                         (mz_uint8 *)decomp_outbuf,
-                                         (mz_uint8 *)decomp_outbuf,
-                                         &decomp_outbuf_len,
-                                         TINFL_FLAG_HAS_MORE_INPUT )) == TINFL_STATUS_NEEDS_MORE_INPUT) {
+                    if (r8_inflate(
+                            (unsigned char*)decomp_outbuf,
+                            &decomp_outbuf_len,
+                            request->call.ota_update.data.bytes,
+                            &decomp_inbuf_len, true)) {
+//                    if (uncompress (
+//                            (unsigned char*)decomp_outbuf,
+//                            &decomp_outbuf_len,
+//                            request->call.ota_update.data.bytes,
+//                            decomp_inbuf_len) == Z_OK) {
 
-                        if (esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len) == ESP_OK) {
+//                    if ((decomp_status = tinfl_decompress(decomp,
+//                                         (const mz_uint8 *) request->call.ota_update.data.bytes,
+//                                         &decomp_inbuf_len,
+//                                         (mz_uint8 *)decomp_outbuf,
+//                                         (mz_uint8 *)decomp_outbuf,
+//                                         &decomp_outbuf_len,
+//                                         TINFL_FLAG_HAS_MORE_INPUT )) == TINFL_STATUS_NEEDS_MORE_INPUT) {
+
+
+                        if ((_ret = esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len)) == ESP_OK) {
                             m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                            _crc32 = crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
+
+//                            ESP_LOGD(r8TAG, "chunk %d - %d -> %lu  - crc32 %u, %lu remains",
+//                                    update_chunk,
+//                                    request->call.ota_update.data.size,
+//                                    decomp_outbuf_len,
+//                                    _crc32,
+//                                    decomp_inbuf_len);
+
+                            m->which_data = FROM_MICRO_raw_tag;
+                            memcpy(&m->data.raw.bytes, &_crc32, sizeof(_crc32));
+                            m->data.raw.size = sizeof(_crc32);
+
+                            MD5Update(&md5_context, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
                             update_chunk += 1;
-                        }
-                    } else {
-
-                        switch (decomp_status) {
-
-//                            case TINFL_STATUS_FAILED_CANNOT_MAKE_PROGRESS:
-//                                blink(1); break;
-                            case TINFL_STATUS_BAD_PARAM:
-                                blink(2); break;
-                            case TINFL_STATUS_ADLER32_MISMATCH:
-                                blink(3); break;
-                            case TINFL_STATUS_FAILED:
-                                blink(4); break;
-                            case TINFL_STATUS_DONE:
-                                blink(5); break;
-                            case TINFL_STATUS_NEEDS_MORE_INPUT:
-                                blink(6); break;
-                            case TINFL_STATUS_HAS_MORE_OUTPUT:
-                                blink(7); break;
                         }
                     }
 
                 } else if (request->call.ota_update.chunk == 0) {
 
-                    //Finish update (last chunk)
-                    //2018-10-16 12:00:03
-                    //
+                    //Finish update
 
 
-                    if (tinfl_decompress(decomp,
-                                         (const mz_uint8 *)request->call.ota_update.data.bytes,
-                                         &decomp_inbuf_len,
-                                         (mz_uint8 *)decomp_outbuf,
-                                         (mz_uint8 *)decomp_outbuf,
-                                         &decomp_outbuf_len,
-                                         0) == TINFL_STATUS_DONE) {
+                    if (r8_inflate(
+                            (unsigned char*)decomp_outbuf,
+                            &decomp_outbuf_len,
+                            request->call.ota_update.data.bytes,
+                            &decomp_inbuf_len, false)) {
 
-                        if (esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len) == ESP_OK) {
-                            if (esp_ota_end(update_handle) == ESP_OK) {
+//                    if (uncompress (
+//                            (unsigned char*)decomp_outbuf,
+//                            &decomp_outbuf_len,
+//                            request->call.ota_update.data.bytes,
+//                            decomp_inbuf_len) == Z_OK) {
 
-                                if (esp_ota_set_boot_partition(update_partition) == ESP_OK) {
+//                    if ((decomp_status = tinfl_decompress(decomp,
+//                                                          (const mz_uint8 *)request->call.ota_update.data.bytes,
+//                                                          &decomp_inbuf_len,
+//                                                          (mz_uint8 *)decomp_outbuf,
+//                                                          (mz_uint8 *)decomp_outbuf,
+//                                                          &decomp_outbuf_len,
+//                                                          0)) == TINFL_STATUS_DONE) {
+
+
+                        if ((_ret = esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len)) == ESP_OK) {
+                            decomp_outbytes += decomp_outbuf_len;
+//                            ESP_LOGD(r8TAG, "chunk %d - %d -> %d  total %d - crc32 %zu", update_chunk, decomp_inbuf_len, decomp_outbuf_len, decomp_outbytes, crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len));
+
+                            m->which_data = FROM_MICRO_raw_tag;
+                            _crc32 = crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
+                            memcpy(&m->data.raw.bytes, &_crc32, sizeof(_crc32));
+                            m->data.raw.size = sizeof(_crc32);
+
+                            MD5Update(&md5_context, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
+                            MD5Final(md5_out, &md5_context);
+                            static char hex_tmp[33];
+
+                            for (uint8_t i = 0; i < 16; i++)  {
+                                printf("%02x",md5_out[i]);
+                                sprintf(&hex_tmp[i*2],"%02x", md5_out[i]);
+                            }
+
+                            ESP_LOGD(r8TAG, "MD5 hash: %s", hex_tmp);
+
+                            if ((_ret = esp_ota_end(update_handle)) == ESP_OK) {
+                                if ((_ret = esp_ota_set_boot_partition(update_partition)) == ESP_OK) {
                                     m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+                                    decomp_outbytes += decomp_outbuf_len;
                                     update_in_progress = false;
+
+
                                 }
                             }
                         }
                     }
                 }
+                break;
 
             } else {
 
+                memset((void*)&md5_context,0x00,sizeof(md5_context));
+                memset(md5_out,0x00,16);
+                MD5Init(&md5_context);
+
+
                 //start an ota update
 
-                decomp_outbuf = (char*)malloc(DECOMP_SIZE);
+                if (!r8_inflate_init()){
+//                        request->call.ota_update.data.bytes
+//                        )){
+                    break;
+                }
+
+
+                decomp_outbuf = (uint8_t*)malloc(DECOMP_SIZE);
                 if (decomp_outbuf == NULL) {
                     break;
                 }
 
-                decomp = (tinfl_decompressor*)malloc(sizeof(tinfl_decompressor));
-
-                if (decomp == NULL){
-                    free(decomp_outbuf);
-                    break;
-                }
-
-                tinfl_init(decomp);
+//                decomp = (tinfl_decompressor*)malloc(sizeof(tinfl_decompressor));
+//
+//                if (decomp == NULL){
+//                    free(decomp_outbuf);
+//                    break;
+//                }
+//
+//                tinfl_init(decomp);
 
                 update_partition = esp_ota_get_next_update_partition(NULL);
 
@@ -844,52 +997,49 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
                 }
 
                 if (request->call.ota_update.chunk == 0 &&
-                    esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle) == ESP_OK) {
+                        (_ret = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle)) == ESP_OK) {
 
-                    if ((decomp_status = tinfl_decompress(decomp,
-                            (const mz_uint8 *)request->call.ota_update.data.bytes,
-                            &decomp_inbuf_len,
-                            (mz_uint8 *)decomp_outbuf,
-                            (mz_uint8 *)decomp_outbuf,
+
+                    if (r8_inflate(
+                            decomp_outbuf,
                             &decomp_outbuf_len,
-                            TINFL_FLAG_HAS_MORE_INPUT )) == TINFL_STATUS_NEEDS_MORE_INPUT) {
+                            request->call.ota_update.data.bytes,
+                            &decomp_inbuf_len, true)) {
+//
+//                    if (uncompress (
+//                            (unsigned char*)decomp_outbuf,
+//                            &decomp_outbuf_len,
+//                            request->call.ota_update.data.bytes,
+//                            decomp_inbuf_len) == Z_OK) {
 
-                        if (esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len) == ESP_OK) {
+
+//                    if ((decomp_status = tinfl_decompress(decomp,
+//                                         (const mz_uint8 *) request->call.ota_update.data.bytes,
+//                                         &decomp_inbuf_len,
+//                                         (mz_uint8 *) decomp_outbuf,
+//                                         (mz_uint8 *) decomp_outbuf,
+//                                         &decomp_outbuf_len,
+//                                         TINFL_FLAG_PARSE_ZLIB_HEADER )) == TINFL_STATUS_DONE) {
+
+                        if ((_ret = esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len)) == ESP_OK) {
+                            MD5Update(&md5_context, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
+//                            ESP_LOGD(r8TAG, "chunk %d - %d -> %d  total %d - crc32 %zu", update_chunk, decomp_inbuf_len, decomp_outbuf_len, decomp_outbytes, crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len));
+
                             m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
+
+                            m->which_data = FROM_MICRO_raw_tag;
+                            _crc32 = crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
+                            memcpy(&m->data.raw.bytes, &_crc32, sizeof(_crc32));
+                            m->data.raw.size = sizeof(_crc32);
+
                             update_chunk = 1;
                             update_in_progress = true;
                         }
                     } else {
-
-                        switch (decomp_status) {
-
-//                            case TINFL_STATUS_FAILED_CANNOT_MAKE_PROGRESS:
-//                                blink(1); break;
-                            case TINFL_STATUS_BAD_PARAM:
-                                blink(2);
-                                break;
-                            case TINFL_STATUS_ADLER32_MISMATCH:
-                                blink(3);
-                                break;
-                            case TINFL_STATUS_FAILED:
-                                blink(4);
-                                break;
-                            case TINFL_STATUS_DONE:
-                                blink(5);
-                                break;
-                            case TINFL_STATUS_NEEDS_MORE_INPUT:
-                                blink(6);
-                                break;
-                            case TINFL_STATUS_HAS_MORE_OUTPUT:
-                                blink(7);
-                                break;
-                        }
+                        ESP_LOGD("OTA_FAIL","%d", decomp_status);
                     }
-                } else {
-                    blink(8);
                 }
             }
-
         }
         break;
 
@@ -903,6 +1053,16 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
             m->msg.result.result = RESULT_TYPE_RT_UNKNOWN;
             break;
     }
+
+#ifdef ESP32
+
+    if (_ret != ESP_OK) {
+            m->which_data = FROM_MICRO_raw_tag;
+            strcpy((char*)m->data.raw.bytes, esp_err_to_name(_ret));
+            m->data.raw.size = strlen(esp_err_to_name(_ret));
+    }
+
+#endif
 
 }
 

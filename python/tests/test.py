@@ -27,26 +27,24 @@ except:
 LARGE_PING = True
 PING_WAIT = 0.0001
 
-from reticul8 import pjon_strategies, rpc
+from reticul8 import pjon_strategies, rpc, block_compressor
 from reticul8.arduino import *
 class ESP_Node(rpc.Node):
 
     async def notify_startup(self):
         print("STARTUP from {}!".format(self.device_id))
 
-        self.bmp = BMP280(self, 33, 32)
-        print(await self.bmp.temp_and_pressure)
+
+        await ota_update(self, os.path.join(path.expanduser('~'), 'esp/xha_32/build/reticul8_esp32.bin'))
+        # self.bmp = BMP280(self, 33, 32)
+        # print(await self.bmp.temp_and_pressure)
 
         with self:
 
-            assert await pinMode(22, OUTPUT)
-            h = 0
             while True:
-                await digitalWrite(22, LOW if h ==0 else HIGH)
-                h = 0 if h == 1 else 1
-                await ota_test()
+                await ping()
+                await asyncio.sleep(0.2)
 
-            await ping()
 
             for i in range(5):
                 await digitalWrite(22, HIGH)
@@ -61,114 +59,49 @@ class ESP_Node(rpc.Node):
                 await ping()
 
             await PWM_config(22)
-            print(await self.bmp.temp_and_pressure)
+            # print(await self.bmp.temp_and_pressure)
             while True:
                 await PWM_fade(22, 0, 500)
                 await sleep(1)
                 await PWM_fade(22, 8192, 500)
                 await sleep(1)
 
-OTA_UPDATE_SIZE = 192
-COMPRESS_CHUNKS = 16
-import zlib
-import io
-
-class block_compressor(object):
-
-    def __init__(self, in_bytes, block_size):
-
-        self.c = zlib.compressobj(zlib.Z_BEST_COMPRESSION, zlib.DEFLATED, -15)
-        self.bs = block_size
-        self.input = in_bytes.read()
-        self.pos = 0
-
-    def blocks(self):
-        while True:
-            next = self.next_block()
-            if next is None:
-                raise GeneratorExit()
-            yield next
-
-    def next_block(self):
-
-        if self.pos == len(self.input):
-            return None
-
-        size = self.bs * 20
-
-        if size > self.pos + len(self.input):
-            size = len(self.input) - self.pos
-
-        while True:
-            last_c, last_d = self.compress_next_chunk(size)
-
-            diff = len(last_d) - self.bs
-
-            if diff == 0:
-                self.c = last_c
-                self.pos += size
-                return size, last_d
-            elif diff < 0:
-                #block is too small
-                size += 1
-
-
-            else:
-                #block is too big
-                size -= 1
-
-            if size == 0:
-                return None
-
-
-
-    def get_input(self, size):
-        assert self.pos + size < len(self.input)
-        return self.input[self.pos:self.pos + size]
-
-    def compress_next_chunk(self, size):
-
-        data = self.get_input(size)
-        c = self.c.copy()
-        # return c, c.compress(data) + c.flush(zlib.Z_FULL_FLUSH)
-        return c, c.compress(data) + c.flush(zlib.Z_SYNC_FLUSH)
-
-
-
 
 
 
 
 async def ota_update(node, filename):
-    chunk = 0
+    """send an OTA update using zlib compression.
+    In testing, a release build esp32 binary is compressed to
+    approx  71 percent of its original size using this method"""
 
+    OTA_UPDATE_SIZE = 200
+    chunk = 0
     original_timeout = node.transport.TIMEOUT_US
-    # first packet takes > 800ms
+    # first packet takes > 800ms - I guess the ESP32 is wiping the partition?
     node.transport.TIMEOUT_US = 15 * 100000
 
     with open(filename, 'rb') as rom:
 
-
-        blocks = block_compressor(rom, OTA_UPDATE_SIZE)
-
-        # compress = zlib.compressobj(zlib.Z_BEST_COMPRESSION, zlib.DEFLATED, -15)
-        # compressed = compress.compress(rom.read()) + compress.flush()
-        # compressed = zlib.compress(rom.read(), 2)
-        # total = len(compressed)
-        # rom = io.BytesIO(compressed)
+        blocks = block_compressor.block_compressor(rom, OTA_UPDATE_SIZE)
 
         with node:
 
             logging.debug('Starting update')
 
-            for size, block in blocks.blocks():
+            for crc32, size, block in blocks.blocks():
 
-                logging.info('Sending chunk {:>5,} - size {} <- {}'.format(chunk, size, len(block)))
-                assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=chunk, data=block)))
+                logging.info('{:.0f}% / {:.2f} - Sending chunk {:>5,} - {:,}b -> {}b - crc32: {}'.format(blocks.percent, blocks.ratio, chunk, size, len(block), crc32))
+                result = await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=chunk if blocks.more else 0, data=block))
+                assert check_success(result)
+                remote_crc = pjon_strategies.decode_uint32t(result.raw)
+                if crc32 != remote_crc:
+                    logging.error('CRC Mismatch Local {} remote {}'.format(crc32, remote_crc))
+                    exit(1)
                 chunk += 1
 
-            logging.info('Finalizing update')
-            assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=0, data='')))
+            # logging.info('Finalizing update')
+            # assert check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().ota_update(chunk=0, data=bytes([0,0]))))
             logging.info('Done!')
 
     node.transport.TIMEOUT_US = original_timeout
@@ -182,8 +115,7 @@ class TSA_Node(rpc.Node):
 
     async def notify_startup(self):
         print("startup from {}!".format(self.device_id))
-        await ota_update(self, os.path.join(path.expanduser('~'), 'esp/xha_32/build/reticul8_esp32.bin'))
-        return
+
         if False:
             other = self.transport.nodes[12]
             other.startup = datetime.datetime.now()
@@ -191,7 +123,9 @@ class TSA_Node(rpc.Node):
 
         with self:
 
-            await ping()
+            while True:
+                await ping()
+                await asyncio.sleep(2)
 
             await pinMode(22, OUTPUT)
             for i in range(3):
@@ -200,7 +134,7 @@ class TSA_Node(rpc.Node):
                 await digitalWrite(22, LOW)
                 await sleep(.1)
 
-            await esp32_reboot()
+            # await esp32_reboot()
 
             await pinMode(19, INPUT_PULLUP)
             assert await digitalRead(19) == HIGH
@@ -244,9 +178,10 @@ loop.set_debug(True)
 logging.basicConfig(level=logging.INFO)
 
 UART_PORT = [
-    '/dev/ttyUSB0',
-    '/dev/ttyAMA0',
+    # '/dev/ttyUSB0',
+    # '/dev/ttyAMA0',
     '/dev/tty.wchusbserial1410',
+    '/dev/tty.wchusbserial14120',
     '/dev/tty.SLAB_USBtoUART'
     ]
 
@@ -260,6 +195,7 @@ for port in UART_PORT:
 
 n1= TSA_Node(11, transport=tsaio)
 node = ESP_Node(12, transport=tsaio)
+n1.other = node
 
 
 
@@ -270,7 +206,6 @@ node = ESP_Node(12, transport=tsaio)
 
 loop.run_forever()
 loop.close()
-
 
 
 

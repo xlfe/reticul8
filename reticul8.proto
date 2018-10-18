@@ -34,7 +34,7 @@ message GPIO_READ {
 
 message OTA_UPDATE {
     required fixed32 chunk = 1;
-    required bytes data = 2 [(nanopb) = {max_size: 192}];
+    required bytes data = 2 [(nanopb) = {max_size: 200 }];
 }
 
 

@@ -15,6 +15,9 @@ import os
 
 LOOP_SLEEP = 0.0001
 
+def decode_uint32t(data):
+    (val,) = struct.unpack('<L', data)
+    return val
 
 def decode_build_time(data):
     (build_time,)= struct.unpack('<I', data)
@@ -43,8 +46,8 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
         pjon_cython.ThroughSerialAsync.__init__(self, self.device_id, transport._serial.fd, int(transport._serial._baudrate))
         self.set_asynchronous_acknowledge(False)
         self.set_synchronous_acknowledge(False)
-        self.set_crc_32(True)
-        self.set_packet_id(True)
+        self.set_crc_32(False)
+        self.set_packet_id(False)
         logging.error('Packet overhead {}'.format(self.packet_overhead()))
 
         # Tune this to your serial interface

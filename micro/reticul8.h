@@ -24,9 +24,15 @@
 #ifdef ESP32
 
 
-#define DECOMP_SIZE (2048)
+
+//  compression of upto 3k has been observed - keep this with a fair amount of head roomP
+#define DECOMP_SIZE (8192)
 #include "esp_ota_ops.h"
 #include "rom/miniz.h"
+#include "zlib.h"
+#include <rom/md5_hash.h>
+#include <rom/crc.h>
+
 
 
 
@@ -150,11 +156,29 @@ public:
 
 
     tinfl_decompressor *decomp = NULL;
-    char *decomp_outbuf;
+    uint8_t *decomp_outbuf = NULL;
     tinfl_status decomp_status;
-    size_t decomp_inbytes=0, decomp_outbuf_len=0, decomp_inbuf_len=0, decomp_outbytes = 0;
+    long unsigned int decomp_outbuf_len=0, decomp_inbuf_len=0, decomp_outbytes = 0;
+//    size_t decomp_outbuf_len=0, decomp_inbuf_len=0, decomp_outbytes = 0;
+
+//    bool r8_inflate_init(Bytef *);
+    bool r8_inflate_init();
+    bool r8_inflate(Bytef *dest, uLongf *destLen, const Bytef *source, uLong *sourceLen, bool more);
+
+    z_stream stream;
+/*
+
+    const uInt max = (uInt)-1;
+    uLong len, left;
+    */
+
+    const char *r8TAG = "reticul8";
+    esp_err_t _ret;
+    uint32_t _crc32;
 
 
+    struct MD5Context md5_context;
+    unsigned char md5_out[16];
 
 #endif
 
