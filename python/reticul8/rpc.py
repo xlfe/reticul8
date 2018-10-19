@@ -48,7 +48,8 @@ import contextvars
 
 rpc = RPC_Wrapper()
 
-node = contextvars.ContextVar('node')
+schedule = contextvars.ContextVar('schedule', default=None)
+node = contextvars.ContextVar('node', default=None)
 
 class Node(ContextDecorator):
 
@@ -72,4 +73,29 @@ class Node(ContextDecorator):
 
     async def send_packet(self, packet):
         logging.debug('Sending to {} packet {}'.format(self.device_id, packet))
+        if schedule.get() is not None:
+
+            _ = schedule.get()
+            packet.schedule.count = _.count
+            packet.schedule.every_ms = _.every_ms
+            packet.schedule.after_ms = _.after_ms
+
         return await self.transport.send_packet_blocking(self.device_id, packet)
+
+
+class Schedule(ContextDecorator):
+
+    def __init__(self, count, every_ms, after_ms):
+        self.count = count
+        self.every_ms = every_ms
+        self.after_ms = after_ms
+
+    def __enter__(self):
+        self.token = schedule.set(self)
+        return self
+
+    def __exit__(self, *exc):
+        schedule.reset(self.token)
+        return False
+
+

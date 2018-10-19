@@ -27,7 +27,7 @@ include $(abspath $(COMPONENT_PATH)/nanopb/extra/nanopb.mk)
 PGEN_DIR := $(COMPONENT_PATH)/nanopb/generator/proto
 COMPONENT_ADD_INCLUDEDIRS += nanopb
 COMPONENT_SRCDIRS += nanopb
-PROTOC_OPTS += -I$(abspath nanopb/generator/proto)
+PROTOC_OPTS += -I$(abspath $(COMPONENT_PATH)/nanopb/generator/proto)
 
 $(COMPONENT_PATH)/python/reticul8/%_pb2.py: $(PGEN_DIR)/%.proto
 	$(PROTOC) $(PROTOC_OPTS) --proto_path=$(PGEN_DIR) --python_out=$(COMPONENT_PATH)/python/reticul8/ $<

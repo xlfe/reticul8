@@ -173,7 +173,9 @@ message FROM_MICRO {
 
     oneof data {
         bytes raw = 200 [(nanopb).max_size = 64];
-        fixed32 schedules_remaining = 201;
-
+        sfixed32 schedules_remaining = 201;
     }
+
+    required fixed32 heap_usage = 21;
+    required fixed32 uptime_ms = 22;
 }

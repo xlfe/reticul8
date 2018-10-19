@@ -73,7 +73,16 @@ class Node(rpc.Node):
         print("Received startup message from {}".format(self.device_id))
 
         with self:
-            
+
+            # schedule the inbuilt LED to blink 10 times
+            with Schedule(count=10, after_ms=100, every_ms=500):
+                await digitalWrite(22, LOW)
+
+            with Schedule(count=10, after_ms=600, every_ms=500):
+                await digitalWrite(22, HIGH)
+
+            await asyncio.sleep(10)
+
             #manually blink the LED 
 
             await pinMode(22, OUTPUT)

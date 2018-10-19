@@ -245,6 +245,9 @@ void RETICUL8::notify_event(FROM_MICRO *m) {
 
     uint8_t notify_buf[FROM_MICRO_size];
 
+    m->heap_usage = ESP.getFreeHeap();
+    m->uptime_ms = millis();
+
     pb_ostream_t notify_stream = pb_ostream_from_buffer(notify_buf, sizeof(notify_buf));
     bool status = pb_encode(&notify_stream, FROM_MICRO_fields, m);
 
@@ -266,6 +269,8 @@ void RETICUL8::check_for_scheduled_commands() {
                 m.msg.result.msg_id = this->scheduled_commands[i].command.msg_id;
 
                 this->run_command(&this->scheduled_commands[i].command, &m);
+                m.which_data = FROM_MICRO_schedules_remaining_tag;
+                m.data.schedules_remaining = this->scheduled_commands[i].command.schedule.count;
                 this->notify_event(&m);
 
                 if (this->scheduled_commands[i].command.schedule.count != -1) {
@@ -595,10 +600,8 @@ void RETICUL8::r8_receiver_function(uint8_t *payload, uint16_t length, const PJO
     this->notify_event(&m);
 }
 
-//bool RETICUL8::r8_inflate_init(Bytef * source) {
 bool RETICUL8::r8_inflate_init() {
 
-//    stream.next_in = (Bytef *)source;
     stream.avail_in = 0;
     stream.zalloc = (alloc_func)0;
     stream.zfree = (free_func)0;

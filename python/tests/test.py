@@ -123,11 +123,20 @@ class TSA_Node(rpc.Node):
 
         with self:
 
+            assert await pinMode(22, OUTPUT)
+
+            with Schedule(count=10, after_ms=0, every_ms=500):
+                await digitalWrite(22, LOW)
+
+            with Schedule(count=10, after_ms=500, every_ms=500):
+                await digitalWrite(22, HIGH)
+
+            await asyncio.sleep(10)
+
             while True:
                 await ping()
                 await asyncio.sleep(2)
 
-            await pinMode(22, OUTPUT)
             for i in range(3):
                 await digitalWrite(22, HIGH)
                 await sleep(.1)

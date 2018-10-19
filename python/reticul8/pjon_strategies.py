@@ -164,7 +164,11 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
 
             msg_id = packet.result.msg_id
             self.received_ack_packets[msg_id] = packet
-            # logging.info('received {} from {}'.format(msg_id, source))
+
+            if packet.WhichOneof('data') == 'schedules_remaining':
+                logging.info('Scheduled task notification - original msg_id: {}'.format(msg_id))
+                return
+
 
             if msg_id not in self.waiting_ack_packets:
                 logging.error('Received duplicate packet {}'.format(msg_id))

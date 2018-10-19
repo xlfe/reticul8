@@ -14,6 +14,7 @@ INPUT_PULLUP = r8.PM_INPUT_PULLUP
 
 check_success = lambda _:_ is not None and _.result.result == r8.RT_SUCCESS
 send_rpc = lambda _:rpc.node.get().send_packet(rpc.RPC_Wrapper())
+Schedule = rpc.Schedule
 
 
 async def ping():
@@ -28,6 +29,9 @@ async def digitalWrite(pin, value):
 async def digitalRead(pin):
     result = await rpc.node.get().send_packet(rpc.RPC_Wrapper().gpio_read(pin=pin))
     return result.result.pin_value
+
+async def pinWatch(pin, debounce_ms=200):
+    return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().gpio_monitor(pin=pin, debounce_ms=debounce_ms)))
 
 async def PWM_config(pin):
     return check_success(await rpc.node.get().send_packet(rpc.RPC_Wrapper().pwm_config(pin=pin)))
