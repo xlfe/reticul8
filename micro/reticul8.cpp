@@ -852,7 +852,6 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
             }
 
             if (update_in_progress) {
-                //2018-10-18 23:20:26
 
                 if (update_chunk == request->call.ota_update.chunk) {
 
@@ -863,37 +862,15 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
                             &decomp_outbuf_len,
                             request->call.ota_update.data.bytes,
                             &decomp_inbuf_len, true)) {
-//                    if (uncompress (
-//                            (unsigned char*)decomp_outbuf,
-//                            &decomp_outbuf_len,
-//                            request->call.ota_update.data.bytes,
-//                            decomp_inbuf_len) == Z_OK) {
-
-//                    if ((decomp_status = tinfl_decompress(decomp,
-//                                         (const mz_uint8 *) request->call.ota_update.data.bytes,
-//                                         &decomp_inbuf_len,
-//                                         (mz_uint8 *)decomp_outbuf,
-//                                         (mz_uint8 *)decomp_outbuf,
-//                                         &decomp_outbuf_len,
-//                                         TINFL_FLAG_HAS_MORE_INPUT )) == TINFL_STATUS_NEEDS_MORE_INPUT) {
-
 
                         if ((_ret = esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len)) == ESP_OK) {
                             m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
                             _crc32 = crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
 
-//                            ESP_LOGD(r8TAG, "chunk %d - %d -> %lu  - crc32 %u, %lu remains",
-//                                    update_chunk,
-//                                    request->call.ota_update.data.size,
-//                                    decomp_outbuf_len,
-//                                    _crc32,
-//                                    decomp_inbuf_len);
-
                             m->which_data = FROM_MICRO_raw_tag;
                             memcpy(&m->data.raw.bytes, &_crc32, sizeof(_crc32));
                             m->data.raw.size = sizeof(_crc32);
 
-                            MD5Update(&md5_context, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
                             update_chunk += 1;
                         }
                     }
@@ -909,48 +886,17 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
                             request->call.ota_update.data.bytes,
                             &decomp_inbuf_len, false)) {
 
-//                    if (uncompress (
-//                            (unsigned char*)decomp_outbuf,
-//                            &decomp_outbuf_len,
-//                            request->call.ota_update.data.bytes,
-//                            decomp_inbuf_len) == Z_OK) {
-
-//                    if ((decomp_status = tinfl_decompress(decomp,
-//                                                          (const mz_uint8 *)request->call.ota_update.data.bytes,
-//                                                          &decomp_inbuf_len,
-//                                                          (mz_uint8 *)decomp_outbuf,
-//                                                          (mz_uint8 *)decomp_outbuf,
-//                                                          &decomp_outbuf_len,
-//                                                          0)) == TINFL_STATUS_DONE) {
-
-
                         if ((_ret = esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len)) == ESP_OK) {
-                            decomp_outbytes += decomp_outbuf_len;
-//                            ESP_LOGD(r8TAG, "chunk %d - %d -> %d  total %d - crc32 %zu", update_chunk, decomp_inbuf_len, decomp_outbuf_len, decomp_outbytes, crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len));
 
                             m->which_data = FROM_MICRO_raw_tag;
                             _crc32 = crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
                             memcpy(&m->data.raw.bytes, &_crc32, sizeof(_crc32));
                             m->data.raw.size = sizeof(_crc32);
 
-                            MD5Update(&md5_context, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
-                            MD5Final(md5_out, &md5_context);
-                            static char hex_tmp[33];
-
-                            for (uint8_t i = 0; i < 16; i++)  {
-                                printf("%02x",md5_out[i]);
-                                sprintf(&hex_tmp[i*2],"%02x", md5_out[i]);
-                            }
-
-                            ESP_LOGD(r8TAG, "MD5 hash: %s", hex_tmp);
-
                             if ((_ret = esp_ota_end(update_handle)) == ESP_OK) {
                                 if ((_ret = esp_ota_set_boot_partition(update_partition)) == ESP_OK) {
                                     m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
-                                    decomp_outbytes += decomp_outbuf_len;
                                     update_in_progress = false;
-
-
                                 }
                             }
                         }
@@ -960,39 +906,21 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
 
             } else {
 
-                memset((void*)&md5_context,0x00,sizeof(md5_context));
-                memset(md5_out,0x00,16);
-                MD5Init(&md5_context);
-
-
                 //start an ota update
 
                 if (!r8_inflate_init()){
-//                        request->call.ota_update.data.bytes
-//                        )){
                     break;
                 }
-
 
                 decomp_outbuf = (uint8_t*)malloc(DECOMP_SIZE);
                 if (decomp_outbuf == NULL) {
                     break;
                 }
 
-//                decomp = (tinfl_decompressor*)malloc(sizeof(tinfl_decompressor));
-//
-//                if (decomp == NULL){
-//                    free(decomp_outbuf);
-//                    break;
-//                }
-//
-//                tinfl_init(decomp);
-
                 update_partition = esp_ota_get_next_update_partition(NULL);
 
                 if (update_partition == NULL) {
                     free(decomp_outbuf);
-                    free(decomp);
                     break;
                 }
 
@@ -1005,25 +933,8 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
                             &decomp_outbuf_len,
                             request->call.ota_update.data.bytes,
                             &decomp_inbuf_len, true)) {
-//
-//                    if (uncompress (
-//                            (unsigned char*)decomp_outbuf,
-//                            &decomp_outbuf_len,
-//                            request->call.ota_update.data.bytes,
-//                            decomp_inbuf_len) == Z_OK) {
-
-
-//                    if ((decomp_status = tinfl_decompress(decomp,
-//                                         (const mz_uint8 *) request->call.ota_update.data.bytes,
-//                                         &decomp_inbuf_len,
-//                                         (mz_uint8 *) decomp_outbuf,
-//                                         (mz_uint8 *) decomp_outbuf,
-//                                         &decomp_outbuf_len,
-//                                         TINFL_FLAG_PARSE_ZLIB_HEADER )) == TINFL_STATUS_DONE) {
 
                         if ((_ret = esp_ota_write(update_handle, (const void *) decomp_outbuf, decomp_outbuf_len)) == ESP_OK) {
-                            MD5Update(&md5_context, (const unsigned char*)decomp_outbuf, decomp_outbuf_len);
-//                            ESP_LOGD(r8TAG, "chunk %d - %d -> %d  total %d - crc32 %zu", update_chunk, decomp_inbuf_len, decomp_outbuf_len, decomp_outbytes, crc32_le(0xffffffff, (const unsigned char*)decomp_outbuf, decomp_outbuf_len));
 
                             m->msg.result.result = RESULT_TYPE_RT_SUCCESS;
 
@@ -1035,8 +946,6 @@ void RETICUL8::run_command(RPC *request, FROM_MICRO *m) {
                             update_chunk = 1;
                             update_in_progress = true;
                         }
-                    } else {
-                        ESP_LOGD("OTA_FAIL","%d", decomp_status);
                     }
                 }
             }
