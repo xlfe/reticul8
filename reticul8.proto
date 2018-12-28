@@ -2,6 +2,9 @@
 syntax = "proto2";
 import "nanopb.proto";
 
+option java_package = "net.xlfe.reticul8";
+option java_outer_classname = "Reticul8";
+
 enum PIN_MODE {
     PM_INPUT_PULLUP = 1;
     PM_INPUT_PULLDOWN = 2;
