@@ -44,8 +44,12 @@ $(COMPONENT_PATH)/python/reticul8/reticul8_pb2.py: $(COMPONENT_PATH)/reticul8.pr
 $(COMPONENT_PATH)/java/src/net/xlfe/reticul8/Reticul8.java: $(COMPONENT_PATH)/reticul8.proto
 	$(PROTOC) $(PROTOC_OPTS) --java_out=$(COMPONENT_PATH)/java/src/ --proto_path=$(COMPONENT_PATH) reticul8.proto
 
+$(COMPONENT_PATH)/java/src/fi/kapsi/koti/jpa/nanopb/Nanopb.java: $(PGEN_DIR)/nanopb.proto
+	$(PROTOC) $(PROTOC_OPTS) --java_out=$(COMPONENT_PATH)/java/src/ --proto_path=$(PGEN_DIR) nanopb.proto
+
 build:  $(COMPONENT_PATH)/micro/reticul8.pb.c \
         $(COMPONENT_PATH)/java/src/net/xlfe/reticul8/Reticul8.java \
+        $(COMPONENT_PATH)/java/src/fi/kapsi/koti/jpa/nanopb/Nanopb.java \
         $(COMPONENT_PATH)/python/reticul8/nanopb_pb2.py \
         $(COMPONENT_PATH)/python/reticul8/plugin_pb2.py \
         $(COMPONENT_PATH)/python/reticul8/reticul8_pb2.py
