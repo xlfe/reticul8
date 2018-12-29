@@ -35,16 +35,23 @@ PJON <Any> * RETICUL8::get_bus(uint8_t idx) {
  * if the destination is not this device, check if we know which bus to put it on
  * if not, send it to all busses
  *
+ *  When a PJON bus is set as router - we need to send the ACK ourselves...
  */
 
 void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
 
     RETICUL8 * r8 = ((RETICUL8 *) packet_info.custom_pointer);
     PJON<Any> *to_bus = NULL;
+    bool ack_requested = packet_info.header & PJON_ACK_REQ_BIT;
 
     if (packet_info.receiver_id == r8->bus->device_id()) {
         //Packet meant for this device
+
+        if (ack_requested) {
+            r8->bus->send_synchronous_acknowledge();
+        }
         r8->r8_receiver_function(payload, length, packet_info);
+
     } else {
         //Packet not meant for this device
         uint16_t bus_idx = r8->get_device_bus(packet_info.receiver_id);
@@ -55,7 +62,7 @@ void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON
             for (bus_idx=0; bus_idx < r8->secondary_bus_count; bus_idx++){
                 to_bus = r8->get_bus(bus_idx);
 
-                if (r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length) == PJON_ACK) {
+                if (r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length, ack_requested) == PJON_ACK) {
                     r8->set_device_bus(packet_info.receiver_id, bus_idx);
                     break;
                 }
@@ -68,7 +75,7 @@ void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON
             if (to_bus == NULL)
                 return;
             r8->forward_packet(r8->_master_id, packet_info.receiver_id,
-                    r8->bus, to_bus, payload, length, packet_info.header & PJON_ACK_REQ_BIT);
+                    r8->bus, to_bus, payload, length, ack_requested);
         }
         // figure out which bus this packet needs to go on
         // send blocking with timeout
@@ -100,23 +107,30 @@ uint16_t RETICUL8::forward_packet(
         uint16_t length,
         bool send_ack) {
 
-    uint16_t ret;
+    uint16_t ret = PJON_NAK;
     uint8_t to_bus_original_id = to_bus->device_id();
     to_bus->set_id(from_id);
 
-    if ((ret = to_bus->send_packet(
-            to_id,
-            (char*)payload,
-            length)
-//            PJON_NO_HEADER,
-//            0,
-//            PJON_BROADCAST,
-//            50000)
+    if (send_ack) {
+
+        if ((ret = to_bus->send_packet_blocking(
+                to_id,
+                (char *) payload,
+                length,
+                PJON_NO_HEADER,
+                0,
+                PJON_BROADCAST,
+                50000)
             ) == PJON_ACK) {
-        if (send_ack) {
+            //packet acked by destination - send ack back to source...
             from_bus->send_synchronous_acknowledge();
         }
+
+    } else {
+        //send best effort with no ack
+        to_bus->send_packet(to_id,(char *) payload, length);
     }
+
     to_bus->set_id(to_bus_original_id);
     return ret;
 }
