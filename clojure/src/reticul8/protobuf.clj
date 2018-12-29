@@ -13,5 +13,5 @@
 
 (defn ping
   [_]
-  (protobuf/create Reticul8$RPC {:msg_id _ :call Reticul8$PING}))
+  (protobuf/create Reticul8$RPC {:msg_id _ :ping (protobuf/create Reticul8$PING {:ping true})}))
 

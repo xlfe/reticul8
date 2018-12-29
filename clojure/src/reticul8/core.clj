@@ -14,24 +14,22 @@
       (let [incoming (async/chan)
             outgoing (async/chan)]
            (async/<!! (async/go
-                        (PJON/transport-loop serial-port incoming outgoing)
+                        (PJON/transport-loop serial-port incoming outgoing
+                                             :packet-max-len 254)
                         (loop
                           [packet (async/<!! incoming)
                            i 0]
                           (if (contains? packet :data)
+                            (let [packet (dissoc (assoc packet :message (dissoc (pb/from-micro (byte-array (:data packet))) :raw)) :data)]
                               (do
-                                  (println
-                                    (dissoc
-                                      (assoc packet
-                                             :message (dissoc (pb/from-micro (byte-array (:data packet))) :raw))
-                                      :data))
+                                  (println packet)
                                   (async/put!
                                     outgoing
                                     {
-                                     :receiver-id 11
+                                     :receiver-id (:sender-id packet)
                                      :sender-id 10
-                                     :header #{:ack}
-                                     :data (byte-array
-                                                       (protobuf/->bytes (pb/ping i)))})
-                                  (recur (async/<!! incoming) (inc i)))
-                              (println (str "ERROR: " (:error packet)))))))))
+                                     :packet-id i
+                                     :header #{}
+                                     :data (byte-array (protobuf/->bytes (pb/ping i)))})))
+                            (println (str "ERROR: " (:error packet))))
+                          (recur (async/<!! incoming) (inc i)))))))
