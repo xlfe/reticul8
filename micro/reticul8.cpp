@@ -236,7 +236,7 @@ void RETICUL8::begin(){
 
 #endif
 
-    this->notify_event(&m);
+    this->notify_event(&m, true);
 
 }
 
@@ -255,7 +255,7 @@ void RETICUL8::loop() {
 
 }
 
-void RETICUL8::notify_event(FROM_MICRO *m) {
+void RETICUL8::notify_event(FROM_MICRO *m, bool overwrite_ack) {
 
     uint8_t notify_buf[FROM_MICRO_size];
 
@@ -265,8 +265,14 @@ void RETICUL8::notify_event(FROM_MICRO *m) {
     pb_ostream_t notify_stream = pb_ostream_from_buffer(notify_buf, sizeof(notify_buf));
     bool status = pb_encode(&notify_stream, FROM_MICRO_fields, m);
 
+    uint config = this->bus->config;
+
+    if (overwrite_ack) {
+        config |= PJON_ACK_REQ_BIT;
+    }
+
     if (status) {
-        this->bus->send(this->_master_id, (char*)notify_buf, notify_stream.bytes_written);
+        this->bus->send(this->_master_id, (char*)notify_buf, notify_stream.bytes_written, config);
     }
 }
 

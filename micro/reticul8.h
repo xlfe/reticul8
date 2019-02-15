@@ -115,7 +115,7 @@ public:
     void run_command(RPC *request, FROM_MICRO *reply);
 
     struct WATCHED_PIN watched_pins[RETICUL8_MAX_WATCHED_PINS];
-    void notify_event(FROM_MICRO *m);
+    void notify_event(FROM_MICRO *m, bool override_ack = false);
     void setup_watched_pin(WATCHED_PIN &p, uint8_t pin, uint16_t debounce_ms);
     bool watch_pin(uint8_t pin, uint16_t debounce_ms);
     bool unwatch_pin(uint8_t pin);
