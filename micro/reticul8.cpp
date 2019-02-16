@@ -42,14 +42,9 @@ void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON
 
     RETICUL8 * r8 = ((RETICUL8 *) packet_info.custom_pointer);
     PJON<Any> *to_bus = NULL;
-    bool ack_requested = packet_info.header & PJON_ACK_REQ_BIT;
 
     if (packet_info.receiver_id == r8->bus->device_id()) {
         //Packet meant for this device
-
-        if (ack_requested) {
-            r8->bus->send_synchronous_acknowledge();
-        }
         r8->r8_receiver_function(payload, length, packet_info);
 
     } else {
@@ -61,25 +56,16 @@ void primary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON
 
             for (bus_idx=0; bus_idx < r8->secondary_bus_count; bus_idx++){
                 to_bus = r8->get_bus(bus_idx);
-
-                if (r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length, ack_requested) == PJON_ACK) {
-                    r8->set_device_bus(packet_info.receiver_id, bus_idx);
-                    break;
-                }
+                r8->forward_packet(r8->_master_id, packet_info.receiver_id, r8->bus, to_bus, payload, length);
             }
-
-            //Don't do anything...
 
         } else {
             to_bus = r8->get_bus(bus_idx);
             if (to_bus == NULL)
                 return;
             r8->forward_packet(r8->_master_id, packet_info.receiver_id,
-                    r8->bus, to_bus, payload, length, ack_requested);
+                    r8->bus, to_bus, payload, length);
         }
-        // figure out which bus this packet needs to go on
-        // send blocking with timeout
-        // once PJON_ACK is received, send an ack back on the primary bus
     }
 }
 
@@ -104,33 +90,12 @@ uint16_t RETICUL8::forward_packet(
         PJON<Any> *from_bus,
         PJON<Any> *to_bus,
         uint8_t *payload,
-        uint16_t length,
-        bool send_ack) {
+        uint16_t length) {
 
     uint16_t ret = PJON_NAK;
     uint8_t to_bus_original_id = to_bus->device_id();
     to_bus->set_id(from_id);
-
-    if (send_ack) {
-
-        if ((ret = to_bus->send_packet_blocking(
-                to_id,
-                (char *) payload,
-                length,
-                PJON_NO_HEADER,
-                0,
-                PJON_BROADCAST,
-                50000)
-            ) == PJON_ACK) {
-            //packet acked by destination - send ack back to source...
-            from_bus->send_synchronous_acknowledge();
-        }
-
-    } else {
-        //send best effort with no ack
-        to_bus->send_packet(to_id,(char *) payload, length);
-    }
-
+    to_bus->send_packet(to_id,(char *) payload, length);
     to_bus->set_id(to_bus_original_id);
     return ret;
 }
@@ -150,7 +115,7 @@ void secondary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJ
     //make sure we know which bus this sender_id is on
     bd->r8->set_device_bus(packet_info.sender_id, bd->bus_idx);
     bd->r8->forward_packet(packet_info.sender_id, bd->r8->_master_id,
-            my_bus, bd->r8->bus, payload, length, packet_info.header & PJON_ACK_REQ_BIT);
+            my_bus, bd->r8->bus, payload, length);
 
 }
 
@@ -236,16 +201,16 @@ void RETICUL8::begin(){
 
 #endif
 
-    this->notify_event(&m, true);
+    this->notify_event(&m);
 
 }
 
 uint8_t LED_STATUS = 0;
 void RETICUL8::loop() {
+    esp_task_wdt_reset();
     check_for_events();
     check_for_scheduled_commands();
     bus->update();
-    vTaskDelay(1);
     bus->receive();
 
     for (uint8_t i=0;i<secondary_bus_count;i++) {
@@ -253,9 +218,10 @@ void RETICUL8::loop() {
         secondary[i] -> receive();
     }
 
+    taskYIELD();
 }
 
-void RETICUL8::notify_event(FROM_MICRO *m, bool overwrite_ack) {
+void RETICUL8::notify_event(FROM_MICRO *m) {
 
     uint8_t notify_buf[FROM_MICRO_size];
 
@@ -266,10 +232,6 @@ void RETICUL8::notify_event(FROM_MICRO *m, bool overwrite_ack) {
     bool status = pb_encode(&notify_stream, FROM_MICRO_fields, m);
 
     uint config = this->bus->config;
-
-    if (overwrite_ack) {
-        config |= PJON_ACK_REQ_BIT;
-    }
 
     if (status) {
         this->bus->send(this->_master_id, (char*)notify_buf, notify_stream.bytes_written, config);
