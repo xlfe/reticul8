@@ -4,8 +4,7 @@ from setuptools import setup
 
 setup_requires = ['nose>=1.0']
 
-
-with open("README.md", "r") as fh:
+with open("../README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
@@ -13,9 +12,9 @@ setup(
     version='0.1',
     packages=['reticul8'],
     url='https://github.com/xlfe/reticul8',
-    license='Apache 2.0',
+    license='GNU General Public License v3.0',
     author='xlfe',
-    description='What do you get if you combine Python and and MCUs?',
+    description='Remotely articulated MCU endpoints for Python',
     long_description=long_description,
     long_description_content_type="text/markdown",
     setup_requires=setup_requires,
