@@ -8,6 +8,7 @@
                  [org.clojure/core.async "0.4.474"]
                  ;[clojusc/protobuf "3.5.1-v1.1"]
                  [clojusc/protobuf "3.6.0-v1.2-SNAPSHOT"]
+                 [org.clojure/tools.cli "0.4.1"]
                  [net.xlfe/PJON-clojure "0.1.0-SNAPSHOT"]]
   :main ^:skip-aot reticul8.core
   :java-source-paths [

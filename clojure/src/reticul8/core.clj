@@ -2,19 +2,26 @@
     (:gen-class)
     (:require
       [clojure.core.async :as async]
+      [clojure.tools.cli :refer [parse-opts]]
       [reticul8.protobuf :as pb]
       [protobuf.core :as protobuf]
       [PJON.core :as PJON]))
 
 
-(def serial-port "/dev/cu.wchusbserial1410")
+
+(def cli-options
+  [[
+    "-p" "--port PORT" "Serial port"
+    :default "/dev/cu.wchusbserial1410"]])
+
 
 (defn -main
-      []
-      (let [incoming (async/chan)
+      [& args]
+      (let [opts (parse-opts args cli-options)
+            incoming (async/chan)
             outgoing (async/chan)]
            (async/<!! (async/go
-                        (PJON/transport-loop serial-port incoming outgoing
+                        (PJON/transport-loop (:port (:options opts)) incoming outgoing
                                              :ts-byte-time-out-ms 25
                                              :packet-max-length 254)
                         (loop
