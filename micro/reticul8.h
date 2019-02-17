@@ -9,6 +9,7 @@
 #define PJON_PACKET_MAX_LENGTH (250-4)
 #define PJON_INCLUDE_PACKET_ID true
 #define PJON_INCLUDE_ASYNC_ACK true
+#define R8_MASTER_ID 0
 
 #include "Arduino.h"
 #include "wire.h"
@@ -20,6 +21,7 @@
 
 #define RETICUL8_MAX_WATCHED_PINS 20
 
+#include "r8serial.h"
 
 #ifdef ESP32
 
@@ -89,28 +91,31 @@ class RETICUL8 {
 
 public:
     RETICUL8(
-            PJON <Any> *bus,
-            uint8_t master_id,
-            PJON <Any> *secondary[] = NULL,
-            uint8_t secondary_bus_count = 0);
+            uint8_t device_id,
+            bool serial_router,
+            PJON <Any> *pjon_busses[] = NULL,
+            uint8_t pjon_bus_count = 0);
+
     void loop();
     void begin();
-    void r8_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info);
+    void r8_receiver_function(uint8_t *payload, uint16_t length);
+    void serial_recv_function(uint8_t *payload, uint16_t length, uint8_t dest, uint8_t source);
 
     uint32_t BUILD = __COMPILE_TIME__;
 
+    R8Serial *serial;
+    bool serial_router = false;
     PJON <Any> *get_bus(uint8_t idx);
 
     uint16_t get_device_bus(uint8_t device_id);
     void set_device_bus(uint8_t device_id, uint8_t bus);
 
-    uint16_t forward_packet(uint8_t from_id, uint8_t to_id, PJON<Any> *from_bus, PJON<Any> *to_bus, uint8_t *payload, uint16_t length);
+    void forward_packet(uint8_t from_id, uint8_t to_id, PJON<Any> *to_bus, uint8_t *payload, uint16_t length);
 
-    PJON <Any> *bus;
-    PJON <Any> *secondary[MAX_SECONDARY_BUSSES];
-    uint8_t secondary_bus_count = 0;
+    PJON <Any> *pjon_busses[MAX_SECONDARY_BUSSES];
+    uint8_t pjon_bus_count = 0;
     std::map <uint8_t, uint8_t> secondary_bus_lookup;
-    uint8_t _master_id;
+    uint8_t _device_id;
     void check_for_events();
 
     void run_command(RPC *request, FROM_MICRO *reply);
