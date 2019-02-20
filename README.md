@@ -28,7 +28,7 @@ ESP32 using ESPNOW
 reticul8 is designed to meet the following requirements :-
 
 * The system should be able to run "complex application logic" and be "internet connected"
-* Nodes in the system should be able to connect to the hub using a variety of mediums (wired and wireless)
+* Nodes in the system should be able to connect to the hub using a variety of media (wired and wireless)
 * Nodes should be able to run on common MCU hardware (Arduino and ESP32 targeted initially)
 * Nodes should be fast and reliable, but don't need to be "smart" - application logic can live elsewhere
 * Communication between nodes and controller should be fast and reliable (ie not over the internet!)
