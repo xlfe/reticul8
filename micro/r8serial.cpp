@@ -4,6 +4,7 @@
 
 
 R8Serial::R8Serial() {
+    this->clear_packet();
     Serial.begin(R8_SERIAL_BAUD);
     while (!Serial) {
         ; // wait for serial port to connect. Needed for native USB port only
@@ -13,39 +14,47 @@ R8Serial::R8Serial() {
 
 bool R8Serial::packet_waiting() {
 
-    while (!this->_packet_waiting_recv && Serial.available()) {
+    while (!_packet_waiting_recv && Serial.available()) {
 
         int byte = Serial.read();
         if (byte < 0) {
             continue;
         }
 
-        if (this->_packet_in_progress) {
+        if (_recv_len >= R8_SERIAL_BUF_SZ) {
+            clear_packet();
+            return false;
+        }
 
-            if (this->_esc) {
-                this->_buf[this->_recv_len++] = (uint8_t) byte ^ R8_SERIAL_ESC;
-                this->_esc = false;
+        if (_packet_in_progress) {
+
+            if (_esc) {
+                _buf[_recv_len++] = (uint8_t) (byte ^ R8_SERIAL_ESC);
+                _esc = false;
             } else if (byte == R8_SERIAL_ESC) {
-                this->_esc = true;
+                _esc = true;
             } else if (byte == R8_SERIAL_END) {
 
-                if (this->check_packet()) {
-                    this->_packet_waiting_recv = true;
+                if (check_packet()) {
+                    _packet_waiting_recv = true;
+                } else {
+                    clear_packet();
                 }
-                this->_packet_in_progress = false;
+                _packet_in_progress = false;
             } else {
-                this->_buf[this->_recv_len++] = (uint8_t) byte;
+                _buf[_recv_len++] = (uint8_t) byte;
             }
         } else {
 
             if (byte == R8_SERIAL_START) {
-                this->_packet_in_progress = true;
+                clear_packet();
+                _packet_in_progress = true;
             }
 
         }
     }
 
-    return this->_packet_waiting_recv;
+    return _packet_waiting_recv;
 
 }
 
@@ -56,14 +65,16 @@ bool R8Serial::check_packet() {
     // byte 3... packet
     // byte n-3, n-2, n-1, n crc32
 
-    if (this->_buf[2] != (this->_recv_len - R8_SERIAL_OVERHEAD)) {
+    if (_buf[2] != (_recv_len - R8_SERIAL_OVERHEAD)) {
+        ESP_LOGE("R8Serial", "Len Failed %d != %d",_buf[2], (_recv_len - R8_SERIAL_OVERHEAD));
         return false;
     }
 
     if (!PJON_crc32::compare(
-            PJON_crc32::compute(this->_buf + 3, this->_buf[2]),
-            this->_buf + 3 + ((uint8_t)this->_buf[2])
+            PJON_crc32::compute(_buf, _buf[2] + 3),
+            _buf + 3 + (uint8_t)_buf[2]
     )) {
+        ESP_LOGE("R8Serial", "CRC Failed");
         return false;
     }
 
@@ -98,34 +109,45 @@ uint8_t * R8Serial::get_packet() {
 }
 
 void R8Serial::clear_packet() {
-    this->_recv_len = 0;
-    memset(this->_buf, 0, sizeof(this->_buf));
-    this->_packet_waiting_recv = false;
+    memset(_buf, 0, sizeof(_buf));
+    _recv_len = 0;
+    _packet_waiting_recv = false;
+    _packet_in_progress = false;
+    _esc = false;
 }
 
-void R8Serial::send(uint8_t dest, uint8_t source, uint8_t *buf, uint8_t len) {
+void R8Serial::send(uint8_t dest, uint8_t source, uint8_t *pkt, uint16_t len) {
 
-    uint16_t sb_ptr = 0;
-    uint8_t _send_buf[2*R8_SERIAL_BUF_SZ];
+    uint16_t _ptr = 0;
+    uint8_t _buf[R8_SERIAL_BUF_SZ];
 
-    _send_buf[sb_ptr++] = R8_SERIAL_START;
-    _send_buf[sb_ptr++] = dest;
-    _send_buf[sb_ptr++] = source;
-    _send_buf[sb_ptr++] = len;
+    if (len > R8_SERIAL_MAX_PACKET || len > 255) {
+        return;
+    }
+
+    _buf[_ptr++] = dest;
+    _buf[_ptr++] = source;
+    _buf[_ptr++] = len;
 
     for (uint16_t i=0;i<len; i++) {
-        if (buf[i] == R8_SERIAL_START || buf[i] == R8_SERIAL_END || buf[i] == R8_SERIAL_ESC) {
-            _send_buf[sb_ptr++] = R8_SERIAL_ESC;
-            _send_buf[sb_ptr++] = buf[i] ^ R8_SERIAL_ESC;
+        _buf[_ptr++] = pkt[i];
+    }
+
+    //compute CRC on the three header bytes _and_ the packet
+    uint32_t computed = PJON_crc32::compute(_buf, _ptr);
+    for(uint8_t i = 4; i > 0; i--) {
+        _buf[_ptr++] = (uint8_t)(computed >> (8 * (i - 1)));
+    }
+
+    Serial.write(R8_SERIAL_START);
+    for (uint16_t i =0; i<_ptr; i++) {
+        if (_buf[i] == R8_SERIAL_START || _buf[i] == R8_SERIAL_ESC || _buf[i] == R8_SERIAL_END) {
+            Serial.write(R8_SERIAL_ESC);
+            Serial.write(_buf[i] ^ R8_SERIAL_ESC);
         } else {
-            _send_buf[sb_ptr++] = buf[i];
+            Serial.write(_buf[i]);
         }
     }
-    uint32_t computed = PJON_crc32::compute(_send_buf, sb_ptr);
-    for(uint8_t i = 4; i > 0; i--) {
-        _send_buf[sb_ptr++] = (uint8_t)(computed >> (8 * (i - 1)));
-    }
-    _send_buf[sb_ptr++] = R8_SERIAL_END;
-    Serial.write(_send_buf, sb_ptr);
+    Serial.write(R8_SERIAL_END);
     Serial.flush();
 }
