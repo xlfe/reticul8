@@ -35,7 +35,7 @@ class ESP_Node(rpc.Node):
         print("STARTUP from {}!".format(self.device_id))
 
 
-        await ota_update(self, os.path.join(path.expanduser('~'), 'esp/xha_32/build/reticul8_esp32.bin'))
+        # await ota_update(self, os.path.join(path.expanduser('~'), 'esp/xha_32/build/reticul8_esp32.bin'))
         # self.bmp = BMP280(self, 33, 32)
         # print(await self.bmp.temp_and_pressure)
 
@@ -43,7 +43,7 @@ class ESP_Node(rpc.Node):
 
             while True:
                 await ping()
-                await asyncio.sleep(0.2)
+                # await asyncio.sleep(1.0/40)
 
 
             for i in range(5):
@@ -123,17 +123,18 @@ class TSA_Node(rpc.Node):
 
         with self:
 
-            assert await pinMode(22, OUTPUT)
-
-            with Schedule(count=10, after_ms=0, every_ms=500):
-                await digitalWrite(22, LOW)
-
-            with Schedule(count=10, after_ms=500, every_ms=500):
-                await digitalWrite(22, HIGH)
-
-            await asyncio.sleep(10)
-
+            # assert await pinMode(22, OUTPUT)
+            #
+            # with Schedule(count=10, after_ms=0, every_ms=500):
+            #     await digitalWrite(22, LOW)
+            #     await asyncio.sleep(.7)
+            #     await digitalWrite(22, HIGH)
+            #
             while True:
+                await ping()
+                await asyncio.sleep(1.0/50)
+
+            while False:
                 await ping()
                 await asyncio.sleep(2)
 
@@ -160,7 +161,7 @@ class TSA_Node(rpc.Node):
             await asyncio.sleep(5)
             assert await pinMode(22, OUTPUT) is True
 
-            while True:
+            while False:
                 await digitalWrite(22, HIGH)
                 await sleep(1)
                 await digitalWrite(22, LOW)
@@ -190,14 +191,13 @@ UART_PORT = [
     # '/dev/ttyUSB0',
     # '/dev/ttyAMA0',
     '/dev/tty.wchusbserial1410',
+    '/dev/tty.usbserial-FTVY43AL',
     '/dev/tty.wchusbserial14120',
     '/dev/tty.SLAB_USBtoUART'
     ]
 
 for port in UART_PORT:
     if os.path.exists(port):
-        if esp is not None:
-            esp.off()
         tsaio = ESPTSA(10, url=port, baudrate=115200)
         break
 

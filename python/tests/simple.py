@@ -13,7 +13,7 @@ from reticul8.arduino import *
 
 class Reticul8(object):
 
-    def __init__(self, port, baudrate=115200):
+    def __init__(self, port, baudrate=256000):
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
         self.loop = asyncio.get_event_loop()
         self.baudrate = baudrate
@@ -27,8 +27,7 @@ class Reticul8(object):
 
         self.packet_log = {}
         self.packet_data = {}
-        self.packet_rtt = deque([10000],maxlen=10)
-        self.timeout_bytes = Counter()
+        self.packet_rtt = deque([10000],maxlen=1000)
 
 
     def run(self):
@@ -36,8 +35,6 @@ class Reticul8(object):
             self.loop.run_until_complete(self.start_loops())
             self.loop.run_forever()
         finally:
-            for b,c in self.timeout_bytes.items():
-                print('{}\t{}'.format(b,c))
             self.loop.close()
 
     async def start_loops(self):
@@ -83,7 +80,7 @@ class Reticul8(object):
 
                 self.packet_rtt.append(rtt)
 
-                logging.warning('{} - RTT:{:<5,} ms (max {:<5,} ms) waiting: {}'.format(
+                logging.warning('{} - RTT:{:<5,} ms (stddev {:<5,} ms) waiting: {}'.format(
                     source,
                     self.rtt_mean()/1000,
                     self.rtt_stdev()/1000,
@@ -146,8 +143,6 @@ class Reticul8(object):
                     logging.error('{} has timed out, resending'.format(msg_id))
                     self.packet_log.pop(msg_id)
                     source,dest, pkt = self.packet_data.pop(msg_id)
-                    for b in bytes(pkt.SerializeToString()):
-                        self.timeout_bytes[int(b)]+=1
                     pkt.ClearField('msg_id')
 
                     self.outgoing_packet_queue.put_nowait((source,dest,pkt))
@@ -164,6 +159,7 @@ UART_PORT = [
     # '/dev/ttyUSB0',
     # '/dev/ttyAMA0',
     '/dev/tty.wchusbserial1410',
+    '/dev/tty.wchusbserial14320',
     '/dev/tty.usbserial-FTVY43AL',
     '/dev/tty.wchusbserial14120',
     '/dev/tty.SLAB_USBtoUART'
@@ -171,7 +167,7 @@ UART_PORT = [
 
 for port in UART_PORT:
     if os.path.exists(port):
-        r = Reticul8(port=port, baudrate=115200)
+        r = Reticul8(port=port, baudrate=3000000)
         r.run()
         break
 

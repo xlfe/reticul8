@@ -4,7 +4,7 @@ import pjon_cython
 import time
 import random
 import serial
-from . import reticul8_pb2 as r8
+from reticul8 import reticul8_pb2 as r8
 import asyncio
 from serial_asyncio import SerialTransport
 import datetime
@@ -24,51 +24,60 @@ def decode_build_time(data):
     return datetime.datetime.utcfromtimestamp(build_time)
 
 
-class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
+class SerialAsyncio(pjon_cython.ThroughSerialAsync):
     """Create a serial connection for """
 
     def __init__(self, device_id, *args, **kwargs):
-        ser = serial.serial_for_url(*args, **kwargs)
-        self.transport = SerialTransport(asyncio.get_event_loop(), self, ser)
         self.device_id = device_id
-        self.TIMEOUT_US = 100000
+        self.TIMEOUT_MS = 15
         self.nodes = {}
         self.waiting_ack_packets = {}
         self.received_ack_packets = {}
 
-    def add_node(self, node):
-        self.nodes[node.device_id] = node
 
-    def connection_made(self, transport):
+        self.port = port =  serial.serial_for_url(*args, **kwargs)
+        logging.info('Serial port opened {}'.format(self.port))
 
-        logging.debug('Serial port opened {}'.format(transport._serial._port))
-
-        pjon_cython.ThroughSerialAsync.__init__(self, self.device_id, transport._serial.fd, int(transport._serial._baudrate))
+        pjon_cython.ThroughSerialAsync.__init__(self, self.device_id, self.port.fd, int(self.port._baudrate))
         self.set_asynchronous_acknowledge(False)
         self.set_synchronous_acknowledge(False)
-        self.set_crc_32(False)
-        self.set_packet_id(False)
+        self.set_crc_32(True)
+        self.set_packet_id(True)
         logging.error('Packet overhead {}'.format(self.packet_overhead()))
 
         # Tune this to your serial interface
         # A value of 0 seems to work well for USB serial interfaces,
         # where as the RPi hardware serial requires a minimum of 10
-        self.set_flush_offset(10)
+        self.set_flush_offset(0)
 
         self.msg_id = 0
         self.proc_q = asyncio.Queue()
         self.recv_q = asyncio.Queue()
 
+
+        #Reset device
+        self.port.setDTR(True)
+        self.port.setRTS(True)
+        time.sleep(0.01)
+        self.port.setDTR(False)
+        self.port.setRTS(False)
+
         asyncio.ensure_future(self.loop_task())
         asyncio.ensure_future(self.recv_task())
         asyncio.ensure_future(self.clean_task())
 
-        def br():
-            self.proc_q.put_nowait(True)
+        # def br():
+        #     self.proc_q.put_nowait(True)
+        #
+        # self.port._read_ready = br
 
-        transport._read_ready = br
-        self.notify_connection_made()
+        # try:
+        #     self.notify_connection_made()
+        # except NotImplementedError:
+        #     pass
 
+    def add_node(self, node):
+        self.nodes[node.device_id] = node
     def receive(self, data, length, packet_info):
         self.recv_q.put_nowait((data, packet_info['sender_id']))
 
@@ -93,8 +102,9 @@ class SerialAsyncio(asyncio.Protocol, pjon_cython.ThroughSerialAsync):
             for msg_id in list(self.waiting_ack_packets.keys()):
                 try:
                     sent = self.waiting_ack_packets[msg_id]
-                    if (datetime.datetime.now() - sent).microseconds > self.TIMEOUT_US:
-                        logging.error('Packet ID {} timed out'.format(msg_id))
+                    diff = ((datetime.datetime.now() - sent).microseconds / 1000)
+                    if diff > self.TIMEOUT_MS:
+                        logging.error('Packet ID {} timed out ({} ms)'.format(msg_id, diff))
                         self.received_ack_packets[msg_id] = None
                         self.waiting_ack_packets.pop(msg_id)
                 except KeyError:

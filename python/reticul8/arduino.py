@@ -63,22 +63,4 @@ async def esp32_reboot():
 
 
 
-def cmd_schedule(self):
-    s1 = r8.RPC()
-    s1.schedule.count = -1
-    s1.schedule.after_ms = 1000
-    s1.schedule.every_ms = 2000
-    s1.pwm_fade.pin = 22
-    s1.pwm_fade.duty = 0
-    s1.pwm_fade.fade_ms = 200
-    self.send_packet(11, s1)
-
-    s2 = r8.RPC()
-    s2.schedule.count = -1
-    s2.schedule.after_ms = 0
-    s2.schedule.every_ms = 2000
-    s2.pwm_fade.pin = 22
-    s2.pwm_fade.duty = 8192
-    s2.pwm_fade.fade_ms = 200
-    self.send_packet(11, s2)
 
