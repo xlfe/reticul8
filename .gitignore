@@ -107,3 +107,5 @@ venv.bak/
 micro/*.pb.*
 python/*_pb2.py
 .idea/
+micro/.cache/
+micro/.pio/
