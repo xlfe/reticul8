@@ -12,7 +12,7 @@
 #define R8_MASTER_ID 0
 
 #include "Arduino.h"
-#include "wire.h"
+#include <Wire.h>
 #include <PJON.h>
 
 #include <pb.h>
