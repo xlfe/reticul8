@@ -1,5 +1,6 @@
 
 docker build . -t local/pio
+git submodule update --init
 
 DOCKER_OPT="-v $(pwd):/home/user/workspace --user $(id -u):$(id -g)"
 PROTOC="docker run -it --entrypoint /usr/bin/protoc ${DOCKER_OPT} local/pio"
