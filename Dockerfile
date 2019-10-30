@@ -1,14 +1,13 @@
 FROM python:3.7-slim
 
-RUN pip install -U platformio && \
-    mkdir -p /workspace && \
-    mkdir -p /.platformio && \
-    chmod a+rwx /.platformio && \
-    apt-get update && apt-get install -y protobuf-compiler
+RUN useradd -m -U -u 1000 user
+RUN apt-get update && apt-get install -y protobuf-compiler
+USER user
 
+RUN pip install -U --user platformio && \
+    mkdir -p ~/workspace && \
+    mkdir -p ~/.platformio 
 
-USER 1000
+WORKDIR /home/user/workspace
 
-WORKDIR /workspace
-
-ENTRYPOINT ["platformio"] 
+ENTRYPOINT ["/home/user/.local/bin/pio"] 
