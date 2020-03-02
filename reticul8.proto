@@ -5,20 +5,13 @@ import "nanopb.proto";
 option java_package = "net.xlfe.reticul8";
 option java_outer_classname = "Reticul8";
 
-enum PIN_MODE {
-    PM_INPUT_PULLUP = 1;
-    PM_INPUT_PULLDOWN = 2;
-    PM_OUTPUT = 3;
-}
-
-message GPIO_CONFIG {
-    required fixed32 pin = 1;
-    required PIN_MODE mode = 2;
-};
-
-message GPIO_MONITOR {
-    required fixed32 pin = 1;
-    required fixed32 debounce_ms = 2;
+enum GPIO_MODE {
+    PULLUP = 1;
+    PULLDOWN = 2;
+    OPENDRAIN = 3;
+    GPIO_MODE_INPUT = 4;
+    GPIO_MODE_OUTPUT
+    GPIO_MODE_OUTPUT_OD 
 }
 
 enum PIN_VALUE {
@@ -26,13 +19,21 @@ enum PIN_VALUE {
     PV_HIGH = 1;
 }
 
+message GPIO_MONITOR {
+    required fixed32 pin = 1;
+    required fixed32 debounce_ms = 2;
+    required INPUT_MODE mode = 3;
+}
+
 message GPIO_WRITE {
     required fixed32 pin = 1;
     required PIN_VALUE value  = 2;
 };
 
+// Only works if 
 message GPIO_READ {
     required fixed32 pin = 1;
+    required INPUT_MODE mode = 2;
 }
 
 message OTA_UPDATE {
@@ -40,10 +41,6 @@ message OTA_UPDATE {
     required bytes data = 2 [(nanopb) = {max_size: 200 }];
 }
 
-
-message PWM_CONFIG {
-    required fixed32 pin =1;
-}
 
 message PWM_STOP {
     required fixed32 pin =1;
@@ -94,7 +91,6 @@ message SYSINFO {
 message SCHEDULE {
     required sfixed32 count = 1;
     required fixed32 every_ms = 2;
-    required fixed32 after_ms = 3;
 }
 
 // Allow a nested command to run using the optional data
@@ -104,12 +100,10 @@ message RUN_NESTED {
 
 message RPC {
     oneof call {
-        GPIO_CONFIG gpio_config = 1;
         GPIO_WRITE gpio_write = 2;
         GPIO_READ gpio_read = 3;
         GPIO_MONITOR gpio_monitor = 4;
 
-        PWM_CONFIG pwm_config = 5;
         PWM_DUTY pwm_duty = 6;
         PWM_FADE pwm_fade = 7;
         PWM_STOP pwm_stop = 15;
@@ -127,6 +121,7 @@ message RPC {
     }
 
     required fixed32 msg_id = 200;
+    optional fixed32 delay_ms = 3;
     optional SCHEDULE schedule = 201;
 }
 

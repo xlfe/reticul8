@@ -30,9 +30,11 @@ ${PROTOC} -Inanopb/generator/proto \
 	--proto_path=. \
 	reticul8.proto
 
+function none(){
 docker run -it \
 	${DOCKER_OPT} \
 	-e COMPILE_TIME=`date '+%s'` \
 	-e PLATFORMIO_CORE_DIR=/home/user/workspace/.cache \
 	local/pio \
 	run -d /home/user/workspace/micro -e esp32dev 
+}
