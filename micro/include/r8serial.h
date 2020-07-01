@@ -1,7 +1,5 @@
 
 #pragma once
-#include "Arduino.h"
-#include <PJON.h>
 
 #define R8_SERIAL_BAUD          3000000
 #define R8_SERIAL_MAX_PACKET    254
@@ -12,7 +10,6 @@
 #define R8_SERIAL_START        149
 #define R8_SERIAL_END          234
 #define R8_SERIAL_ESC          187
-
 
 void wsb(uint8_t b, bool escape = true);
 
@@ -39,7 +36,6 @@ private:
     bool _packet_in_progress = false;
     bool _packet_waiting_recv = false;
     uint16_t _recv_len = 0;
-
 
 };
 

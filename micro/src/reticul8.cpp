@@ -1,7 +1,11 @@
-#define ESP32 1
+
+#include <Wire.h>
 #include "reticul8.h"
 #include "r8serial.h"
-
+#include "reticul8.pb.h"
+#include "pb_common.h"
+#include "pb_encode.h"
+#include "pb_decode.h"
 
 
 

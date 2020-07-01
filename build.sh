@@ -1,9 +1,11 @@
+#!/bin/bash
 
-docker build . -t local/pio
+mkdir -p .platformio
+docker build . -t net.xlfe/reticul8
 git submodule update --init
 
 DOCKER_OPT="-v $(pwd):/home/user/workspace --user $(id -u):$(id -g)"
-PROTOC="docker run -it --entrypoint /usr/bin/protoc ${DOCKER_OPT} local/pio"
+PROTOC="docker run -it --entrypoint /usr/bin/protoc ${DOCKER_OPT} net.xlfe/reticul8"
 
 function no() {
 mkdir -p menuconfig
@@ -30,9 +32,12 @@ ${PROTOC} -Inanopb/generator/proto \
 	--proto_path=. \
 	reticul8.proto
 
-docker run -it \
+mv micro/src/reticul8.pb.h micro/include/
+
+docker run --rm -it \
 	${DOCKER_OPT} \
 	-e COMPILE_TIME=`date '+%s'` \
 	-e PLATFORMIO_CORE_DIR=/home/user/workspace/.cache \
-	local/pio \
-	run -d /home/user/workspace/micro -e esp32dev 
+	net.xlfe/reticul8 \
+	run -d /home/user/workspace/micro
+

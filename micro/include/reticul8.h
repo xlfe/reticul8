@@ -1,31 +1,15 @@
-
 #pragma once
-//#define PJON_INCLUDE_ANY
-//#define PJON_INCLUDE_EN
 
+#include <Arduino.h>
+#include <PJON.h>
+#include "r8serial.h"
 #include "reticul8.pb.h"
 
-
-#define PJON_PACKET_MAX_LENGTH (250-4)
-#define PJON_INCLUDE_PACKET_ID true
-#define PJON_INCLUDE_ASYNC_ACK true
-#define R8_MASTER_ID 0
-
-#include "Arduino.h"
-#include <Wire.h>
-#include <PJON.h>
-
-#include <pb.h>
-#include <pb_encode.h>
-#include <pb_decode.h>
+#define R8_MASTER_ID 1
 
 #define RETICUL8_MAX_WATCHED_PINS 20
 
-#include "r8serial.h"
-
 #ifdef ESP32
-
-
 
 //  compression of upto 3k has been observed - keep this with a fair amount of head roomP
 #define DECOMP_SIZE (8192)
@@ -40,7 +24,7 @@
 #define LEDC_NOT_IN_USE 0
 #define LEDC_IN_USE 1
 
-#include <rom/rtc.h>
+#include <esp32/rom/rtc.h>
 #include "driver/ledc.h"
 
 #define RETICUL8_MAX_LEDC_CHANNELS LEDC_CHANNEL_MAX

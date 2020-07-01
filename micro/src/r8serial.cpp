@@ -1,4 +1,6 @@
+#include <Arduino.h>
 #include "r8serial.h"
+#include "utils/crc/PJON_CRC32.h"
 
 
 

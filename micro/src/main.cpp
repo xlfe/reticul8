@@ -1,24 +1,24 @@
 // Define Wifi config for ESPNOW 
+#include <Arduino.h>
+#include <WiFi.h>
 
-#include "esp_wifi_types.h"
+// Define WiFi country configuration
 static wifi_country_t wifi_country = {
-        cc:     "AU",
-        schan:  1,
-        nchan:  14,
-        max_tx_power: 80, // Level 10
-        policy: WIFI_COUNTRY_POLICY_MANUAL
+  cc : "AU",
+  schan : 1,
+  nchan : 14,
+  max_tx_power : 1,
+  policy : WIFI_COUNTRY_POLICY_MANUAL
 };
 
-#include "Arduino.h"
-
-// PJON defines
-
 #define PJON_INCLUDE_ANY
-#define PJON_INCLUDE_TSA
 #define PJON_INCLUDE_EN
+#define PJON_INCLUDE_TSA
+#define PJON_INCLUDE_SWBB
 #define TSA_RESPONSE_TIME_OUT 100000
 
-#include <reticul8.h>
+#include <PJON.h>
+#include "reticul8.h"
 
 PJON<Any> *bus = NULL;
 RETICUL8 *r8 = NULL;
@@ -33,7 +33,7 @@ void setup() {
     Serial.flush();
 
     //EPSNOW
-    StrategyLink <ESPNOW> *link_esp = new StrategyLink<ESPNOW>;
+    StrategyLink<ESPNOW> *link_esp = new StrategyLink<ESPNOW>;
     PJON<Any> *bus_esp = new PJON<Any>();
 
     bus_esp->set_asynchronous_acknowledge(false);
