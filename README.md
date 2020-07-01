@@ -156,6 +156,18 @@ reticul8 helpers
 * Pulse counter (ESP32)
 
 
+## Building using PlatformIO
+
+```bash
+
+source setup_container.sh
+cd 
+cd micro
+pio run
+```
+
+
+
 ## Building an ESP-IDF component node
 
 [Create a new ESP-IDF project](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html), 
