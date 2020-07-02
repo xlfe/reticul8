@@ -10,24 +10,31 @@
 
 
 // A device will only run packets that are addressed to it.
-// If serial_router is true:
+// If this node_id is R
 // * packets received on a pjon_bus with a destination of 0 are forwarded over serial
 // * packets received over serial are forwarded to their destination
 //
 
 
 
-RETICUL8::RETICUL8(uint8_t device_id, bool serial_router, PJON <Any> *pjon_busses[], uint8_t pjon_bus_count) {
+RETICUL8::RETICUL8(uint8_t node_id, StrategyLinkBase *pjon_strategies[], uint8_t pjon_count) {
 
-    this->_device_id = device_id;
-    this->pjon_bus_count = pjon_bus_count;
-    if (serial_router) {
+    this->_device_id = node_id;
+    this->pjon_bus_count = pjon_count;
+    if (node_id == R8_MASTER_NODE_ID) {
         this->serial = new R8Serial();
         this->serial_router = true;
     }
 
-    for (uint8_t i=0;i<pjon_bus_count;i++) {
-        this->pjon_busses[i] = pjon_busses[i];
+    for (uint8_t i=0; i < pjon_count; i++) {
+
+	this->pjon_busses[i] = new PJON<Any>(node_id);
+    	this->pjon_busses[i]->strategy.set_link(pjon_strategies[i]);
+    	this->pjon_busses[i]->set_asynchronous_acknowledge(false);
+    	this->pjon_busses[i]->set_synchronous_acknowledge(false);
+    	this->pjon_busses[i]->set_packet_id(false);
+    	this->pjon_busses[i]->set_crc_32(false);
+
     }
 
     memset(&this->watched_pins, 0, sizeof this->watched_pins);
@@ -50,19 +57,18 @@ PJON <Any> * RETICUL8::get_bus(uint8_t idx) {
 
 
 /*
- * Primary Bus has only the master connected (eg through serial)
+ * Master node (R8_MASTER_NODE_ID=1) has the controller (R8_CONTROLLER_ID=0) connected through serial
  *
- * Any packet received on this bus is checked for destination -
+ * Any packet received is checked for destination -
  * if the destination is not this device, check if we know which bus to put it on
  * if not, send it to all busses
  *
- *  When a PJON bus is set as router - we need to send the ACK ourselves...
  */
 
 void RETICUL8::serial_recv_function(uint8_t *payload, uint16_t length, uint8_t dest, uint8_t source) {
 
-    //Only packets with a source of 0 "Master" are routed
-    if (source != 0) {
+    //Only packets from the Controller are processed
+    if (source != R8_CONTROLLER_ID) {
         return;
     }
 
@@ -123,22 +129,25 @@ void RETICUL8::forward_packet(
 
 
 /*
- * Any packet received on the secondary bus should be forwarded to the master
+ * Packets received on a pjon bus 
  *
- * Devices operating on the secondary bus should address packets to the master
+ * Devices operating on the pjon bus should address packets to the master
  *
  */
-void secondary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
+void pjon_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
 
     BUS_DETAILS *bd = ((BUS_DETAILS*)packet_info.custom_pointer);
 
-    if (
-            packet_info.receiver_id == bd->r8->_device_id &&
-            packet_info.sender_id == R8_MASTER_ID) {
-        //Packet for this device from the master
+    bool AM_I_MASTER = bd->r8->_device_id == R8_MASTER_NODE_ID;
+
+    if ( 
+            R8_MASTER_NODE_ID != bd->r8->_device_id &&        // The master should not executes packets received via PJON
+            packet_info.receiver_id == bd->r8->_device_id &&  // This packet is meant for this device
+            packet_info.sender_id == R8_CONTROLLER_ID) {      // Only packets from the CONTROLLER shold be executed
+        //Packet for this device from the controller
         bd->r8->r8_receiver_function(payload, length);
 
-    } else if (packet_info.receiver_id == R8_MASTER_ID) {
+    } else if (packet_info.receiver_id == R8_CONTROLLER_ID) {
 
         //packet for the master from another device
 
@@ -146,7 +155,7 @@ void secondary_bus_receiver_function(uint8_t *payload, uint16_t length, const PJ
         bd->r8->set_device_bus(packet_info.sender_id, bd->bus_idx);
 
         if (length < R8_SERIAL_MAX_PACKET && bd->r8->serial_router) {
-            bd->r8->serial->send(R8_MASTER_ID, packet_info.sender_id, payload, length);
+            bd->r8->serial->send(R8_CONTROLLER_ID, packet_info.sender_id, payload, length);
         }
     }
 
@@ -172,7 +181,7 @@ void RETICUL8::begin(){
         bd->r8 = this;
         bd->bus_idx = i;
         pjon_busses[i] -> set_custom_pointer(bd);
-        pjon_busses[i] -> set_receiver(secondary_bus_receiver_function);
+        pjon_busses[i] -> set_receiver(pjon_bus_receiver_function);
         pjon_busses[i] -> set_error(error_handler);
 
         if (this->serial_router) {
@@ -274,9 +283,9 @@ void RETICUL8::notify_event(FROM_MICRO *m) {
 
     if (status) {
         if (this->serial_router) {
-            this->serial->send(R8_MASTER_ID, this->_device_id, notify_buf, notify_stream.bytes_written);
+            this->serial->send(R8_CONTROLLER_ID, this->_device_id, notify_buf, notify_stream.bytes_written);
         } else {
-            this->pjon_busses[0]->send(R8_MASTER_ID, (char*)notify_buf, notify_stream.bytes_written);
+            this->pjon_busses[0]->send(R8_CONTROLLER_ID, (char*)notify_buf, notify_stream.bytes_written);
         }
     }
 }

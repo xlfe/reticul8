@@ -79,8 +79,6 @@ class Reticul8Packet(object):
     def data_recv(self, data):
 
         failures = sum(map(self.byte_recv,data))
-        if failures:
-            logging.warning(data)
 
     def byte_recv(self, b):
 
@@ -202,65 +200,4 @@ class Reticul8Serial(asyncio.Protocol):
         return packet.msg_id
 
 
-
-
-# class SimpleIO(pjon_cython.ThroughSerialAsync):
-#     """Create a serial connection for """
-#
-#     def __init__(self, device_id, *args, **kwargs):
-#         self.device_id = device_id
-#         self.waiting_ack_packets = {}
-#         self.received_ack_packets = {}
-#
-#         self.port = serial.serial_for_url(*args, **kwargs)
-#         logging.info('Serial port opened {}'.format(self.port))
-#
-#         pjon_cython.ThroughSerialAsync.__init__(self, self.device_id, self.port.fd, int(self.port._baudrate))
-#         self.set_asynchronous_acknowledge(False)
-#         self.set_synchronous_acknowledge(False)
-#         self.set_crc_32(True)
-#         self.set_packet_id(True)
-#         logging.error('Packet overhead {}'.format(self.packet_overhead()))
-#
-        # Tune this to your serial interface
-        # A value of 0 seems to work well for USB serial interfaces,
-        # where as the RPi hardware serial requires a minimum of 10
-        # self.set_flush_offset(0)
-        #
-        # self.msg_id = 0
-        # self.recv_q = asyncio.Queue()
-        #
-        # Reset device
-        # self.port.setDTR(True)
-        # self.port.setRTS(True)
-        # time.sleep(0.01)
-        # self.port.setDTR(False)
-        # self.port.setRTS(False)
-        #
-        # asyncio.ensure_future(self.loop_task())
-        # asyncio.ensure_future(self.process_task())
-    #
-    # def receive(self, data, length, packet_info):
-    #     self.recv_q.put_nowait((data, packet_info['sender_id']))
-    #
-    # async def recv_task(self):
-    #
-
-    # async def loop_task(self):
-    #
-    #     while True:
-    #         pts, status = self.loop()
-    #         if pts >0:
-    #             logging.info('PTS {} STATUS {}'.format(pts, status))
-    #         await asyncio.sleep(LOOP_SLEEP)
-    #
-    # def send_packet(self, destination, packet):
-    #
-    #     packet.msg_id = self.msg_id
-    #     self.msg_id += 1
-    #
-    #     self.waiting_ack_packets[packet.msg_id] = datetime.datetime.now()
-    #     self.send(destination, packet.SerializeToString())
-    #     logging.info('sent to {}'.format(destination))
-    #
 

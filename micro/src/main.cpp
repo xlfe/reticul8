@@ -13,14 +13,12 @@ static wifi_country_t wifi_country = {
 
 #define PJON_INCLUDE_ANY
 #define PJON_INCLUDE_EN
-#define PJON_INCLUDE_TSA
 #define PJON_INCLUDE_SWBB
-#define TSA_RESPONSE_TIME_OUT 100000
 
 #include <PJON.h>
 #include "reticul8.h"
 
-PJON<Any> *bus = NULL;
+#define R8_SERIAL_BAUD 115200
 RETICUL8 *r8 = NULL;
 
 void loop() {
@@ -29,39 +27,19 @@ void loop() {
 
 void setup() {
 
-    Serial.begin(115200);
-    Serial.flush();
-
-    //EPSNOW
-    StrategyLink<ESPNOW> *link_esp = new StrategyLink<ESPNOW>;
-    PJON<Any> *bus_esp = new PJON<Any>();
-
-    bus_esp->set_asynchronous_acknowledge(false);
-    bus_esp->set_synchronous_acknowledge(true);
-    bus_esp->set_packet_id(true);
-    bus_esp->set_crc_32(true);
-    bus_esp->strategy.set_link(link_esp);
-
-    //Uncomment the line below to make a single bus device (eg leaf)
-    // otherwise the device is initialised as a bridge between esp-now and serial
-
-    // r8 = new RETICUL8(bus_esp, 10); /*
+    StrategyLink<ESPNOW> *esp = new StrategyLink<ESPNOW>;
+    //Configure ESPNOW options
+    char pmk[17] = "\x2b\xb2\x1e\x7a\x83\x13\x76\x9f\xf8\xa9\x3b\x1b\x5b\x52\xd0\x70";
+    esp->strategy.set_channel(1);
+    esp->strategy.set_pmk(pmk);
 
 
-    //Serial
-    StrategyLink <ThroughSerialAsync> *link_tsa = new StrategyLink<ThroughSerialAsync>;
-    link_tsa->strategy.set_serial(&Serial);
+    StrategyLink<SoftwareBitBang> *swbb = new StrategyLink<SoftwareBitBang>;
+    //Configure SoftwareBitBang options
+    swbb->strategy.set_pin(12);
 
-    bus = new PJON<Any>(11);
-    bus->strategy.set_link(link_tsa);
-    bus->set_asynchronous_acknowledge(false);
-    bus->set_synchronous_acknowledge(false);
-    bus->set_packet_id(false);
-    bus->set_crc_32(false);
-
-    PJON<Any> *buses[2] = {bus, bus_esp};
-    r8 = new RETICUL8(10, true, buses, 2);
-    //*/
-
+    //Start Reticul8 MASTER NODE
+    StrategyLinkBase *strategies[2] = {esp, swbb};
+    r8 = new RETICUL8(R8_MASTER_NODE_ID, strategies, 2);
     r8->begin();
 }

@@ -5,7 +5,8 @@
 #include "r8serial.h"
 #include "reticul8.pb.h"
 
-#define R8_MASTER_ID 1
+#define R8_MASTER_NODE_ID 1
+#define R8_CONTROLLER_ID 0
 
 #define RETICUL8_MAX_WATCHED_PINS 20
 
@@ -75,10 +76,9 @@ class RETICUL8 {
 
 public:
     RETICUL8(
-            uint8_t device_id,
-            bool serial_router,
-            PJON <Any> *pjon_busses[] = NULL,
-            uint8_t pjon_bus_count = 0);
+	    uint8_t node_id, 
+	    StrategyLinkBase *pjon_strategies[] = NULL,
+	    uint8_t pjon_count = 0);
 
     void loop();
     void begin();

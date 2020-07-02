@@ -18,9 +18,11 @@ ESP32 using ESPNOW
 
 ```
                                           
-"HUB" (Running Python) <--Serial/UART--> NODE 1 (ESP32)
-                                          ^--ESPNOW --> NODE 2 (ESP32)
-                                          ^--ESPNOW --> NODE n (ESP32)
+                                     				      ┏┅┅┅┅[PJON/SWBB]┅┅┅┅┅┅▶ **Node**(ARDUINO)
+			             				      ┃
+**Controller**(Python)◀┅┅┅[Serial/UART]┅┅┅┅▶**Master**(ESP32)◀┅┅┅┅┅┅┅┅┫
+				     				      ┃
+                                     				      ┗┅┅┅[PJON/ESPNOW]┅┅┅┅┅┅▶ **Node**(ESP32)
 ```
 
 ### Rationale
@@ -156,6 +158,17 @@ reticul8 helpers
 * Pulse counter (ESP32)
 
 
+## Performance
+
+* The controller keeps track of requests and waiting for responses from the node
+* The controller will place one request at a time
+* The master is the micro-controller with device ID 0, connected to the controller via SERIAL 
+* The master is responsible for routing messages to other Nodes
+* Master and nodes must not perform any blocking actions
+* All communication is async in each direction
+
+
+
 ## Building using PlatformIO
 
 ```bash
@@ -261,4 +274,3 @@ COMPONENT_DEPENDS += reticul8
 
 #Used for build timestamp
 CPPFLAGS += -D"__COMPILE_TIME__ =`date '+%s'`"
-```
