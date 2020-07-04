@@ -98,7 +98,7 @@ class Reticul8Packet(object):
                     self.clear()
                     return 0
                 except:
-                    logging.error("Bad packet received :"+ bytes(self.buf))
+                    logging.error("Bad packet received ", self.buf)
                     self.clear()
                     return 1
 

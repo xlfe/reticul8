@@ -1,8 +1,7 @@
 
 #pragma once
 
-//#define R8_SERIAL_BAUD          3000000
-#define R8_SERIAL_BAUD          115200
+#define R8_SERIAL_BAUD          921600
 #define R8_SERIAL_MAX_PACKET    254
 #define R8_SERIAL_OVERHEAD      (1+2+4)
 #define R8_SERIAL_BUF_SZ        (R8_SERIAL_MAX_PACKET + R8_SERIAL_OVERHEAD)

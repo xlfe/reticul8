@@ -67,7 +67,6 @@ class Reticul8(object):
                 print('pkt_decode_loop: '+ packet)
                 packet = None
 
-            #logging.warning('{} Packet received from {} to {}\n{}'.format(ts, source, dest, packet))
 
             msg_id = int(packet.result.msg_id)
 
@@ -75,6 +74,7 @@ class Reticul8(object):
                 self.packet_data.pop(msg_id)
             except KeyError:
                 logging.error('Unkown msg_id :{}'.format(msg_id))
+                logging.warning('{} Packet received from {} to {}\n{}'.format(ts, source, dest, packet))
 
             try:
                 sent = self.packet_log.pop(msg_id)
@@ -82,12 +82,14 @@ class Reticul8(object):
 
                 self.packet_rtt.append(rtt)
 
-                logging.warning('{} - RTT:{:<5,} ms (stddev {:<5,} ms) waiting: {}'.format(
-                    source,
-                    self.rtt_mean()/1000,
-                    self.rtt_stdev()/1000,
-                    str(packet).replace('\n',' ')
-                ))
+                if msg_id % 10 == 0:
+
+                    logging.warning('{} - RTT:{:<5,} ms (stddev {:<5,} ms) waiting: {}'.format(
+                        source,
+                        self.rtt_mean()/1000,
+                        self.rtt_stdev()/1000,
+                        str(packet).replace('\n',' ')
+                    ))
             except KeyError:
                 logging.warning('Received duplicate packet {}'.format(msg_id))
 
@@ -169,7 +171,7 @@ UART_PORT = [
 
 for port in UART_PORT:
     if os.path.exists(port):
-        r = Reticul8(port=port, baudrate=115200)
+        r = Reticul8(port=port, baudrate=921600)
         r.run()
         break
 

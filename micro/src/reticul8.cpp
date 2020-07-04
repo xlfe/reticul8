@@ -8,6 +8,7 @@
 #include "pb_decode.h"
 
 
+
 static const char* TAG = "RETICUL8";
 
 
@@ -240,8 +241,8 @@ void RETICUL8::begin(){
 uint8_t LED_STATUS = 0;
 void RETICUL8::loop() {
 #ifdef ESP32
-    taskYIELD();
-    esp_task_wdt_reset();
+	esp_task_wdt_reset();
+	taskYIELD();
 #endif
 
     check_for_events();
