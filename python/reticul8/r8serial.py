@@ -98,7 +98,7 @@ class Reticul8Packet(object):
                     self.clear()
                     return 0
                 except:
-                    logging.warning(bytes(self.buf))
+                    logging.error("Bad packet received :"+ bytes(self.buf))
                     self.clear()
                     return 1
 
@@ -153,13 +153,6 @@ class Reticul8Serial(asyncio.Protocol):
 
     def data_received(self, data):
         self.r8packet.data_recv(data)
-
-        # print(data)
-
-        # s = data.decode('utf-8')
-        # print(s)
-        # for _ in s.split('\n'):
-        #     print(_)
 
     def connection_lost(self, exc):
         self._transport.loop.stop()

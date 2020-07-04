@@ -8,6 +8,8 @@
 #include "pb_decode.h"
 
 
+static const char* TAG = "RETICUL8";
+
 
 // A device will only run packets that are addressed to it.
 // If this node_id is R
@@ -137,8 +139,6 @@ void RETICUL8::forward_packet(
 void pjon_bus_receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info) {
 
     BUS_DETAILS *bd = ((BUS_DETAILS*)packet_info.custom_pointer);
-
-    bool AM_I_MASTER = bd->r8->_device_id == R8_MASTER_NODE_ID;
 
     if ( 
             R8_MASTER_NODE_ID != bd->r8->_device_id &&        // The master should not executes packets received via PJON
@@ -279,7 +279,6 @@ void RETICUL8::notify_event(FROM_MICRO *m) {
 
     pb_ostream_t notify_stream = pb_ostream_from_buffer(notify_buf, sizeof(notify_buf));
     bool status = pb_encode(&notify_stream, FROM_MICRO_fields, m);
-
 
     if (status) {
         if (this->serial_router) {

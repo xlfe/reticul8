@@ -1,7 +1,7 @@
 FROM python:3.7-slim
 
 RUN useradd -m -U -u 1000 user
-RUN apt-get update && apt-get install -y protobuf-compiler cmake g++ git
+RUN apt-get update && apt-get install -y protobuf-compiler make g++ git libncurses-dev flex bison gperf
 USER user
 
 RUN pip install -U --user platformio \
@@ -11,5 +11,6 @@ RUN pip install -U --user platformio \
     mkdir -p ~/.platformio 
 
 WORKDIR /home/user/workspace
-
-ENTRYPOINT ["/home/user/.local/bin/pio"] 
+ENV PATH="/home/user/.local/bin:${PATH}"
+ENV COMPILE_TIME=1234
+ENTRYPOINT ["/home/user/.local/bin/pio"]

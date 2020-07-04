@@ -8,12 +8,13 @@ import math
 import os
 from collections import deque, Counter
 
-from reticul8 import simple, rpc
+from reticul8 import rpc
+from reticul8.r8serial import Reticul8Serial
 from reticul8.arduino import *
 
 class Reticul8(object):
 
-    def __init__(self, port, baudrate=256000):
+    def __init__(self, port, baudrate):
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
         self.loop = asyncio.get_event_loop()
         self.baudrate = baudrate
@@ -40,7 +41,7 @@ class Reticul8(object):
     async def start_loops(self):
 
         ser = serial.Serial(port=self.port, baudrate=self.baudrate)
-        self.r8serial = protocol = simple.Reticul8Serial(self.incoming_packet_queue)
+        self.r8serial = protocol = Reticul8Serial(self.incoming_packet_queue)
         serial_asyncio.SerialTransport(self.loop, protocol, ser)
         asyncio.create_task(self.pkt_decode_loop())
         asyncio.create_task(self.process_loop())
@@ -63,16 +64,17 @@ class Reticul8(object):
                 packet.ParseFromString(pkt)
                 assert packet.IsInitialized()
             except (DecodeError, AssertionError):
+                print('pkt_decode_loop: '+ packet)
                 packet = None
 
-            # logging.warning('{} Packet received from {} to {}\n{}'.format(ts, source, dest, packet))
+            #logging.warning('{} Packet received from {} to {}\n{}'.format(ts, source, dest, packet))
 
             msg_id = int(packet.result.msg_id)
 
             try:
                 self.packet_data.pop(msg_id)
             except KeyError:
-                pass
+                logging.error('Unkown msg_id :{}'.format(msg_id))
 
             try:
                 sent = self.packet_log.pop(msg_id)
@@ -108,14 +110,14 @@ class Reticul8(object):
         return int(max(self.packet_rtt)/(1000.0))
 
     def timedout(self):
-        return self.rtt_mean() *2#+ 2*self.rtt_stdev()
+        return 1000000# + self.rtt_mean() *2 + 2*self.rtt_stdev()
 
     async def process_loop(self):
 
         while True:
             packet = await self.received_packet_queue.get()
             pkt = rpc.RPC_Wrapper().ping()
-            self.outgoing_packet_queue.put_nowait((0,10,pkt))
+            self.outgoing_packet_queue.put_nowait((0,1,pkt))
 
     async def packet_send_loop(self):
 
@@ -156,7 +158,7 @@ class Reticul8(object):
 
 
 UART_PORT = [
-    # '/dev/ttyUSB0',
+    '/dev/ttyUSB0',
     # '/dev/ttyAMA0',
     '/dev/tty.wchusbserial1410',
     '/dev/tty.wchusbserial14320',
@@ -167,7 +169,7 @@ UART_PORT = [
 
 for port in UART_PORT:
     if os.path.exists(port):
-        r = Reticul8(port=port, baudrate=3000000)
+        r = Reticul8(port=port, baudrate=115200)
         r.run()
         break
 

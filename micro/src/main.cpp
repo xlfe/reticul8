@@ -18,7 +18,6 @@ static wifi_country_t wifi_country = {
 #include <PJON.h>
 #include "reticul8.h"
 
-#define R8_SERIAL_BAUD 115200
 RETICUL8 *r8 = NULL;
 
 void loop() {

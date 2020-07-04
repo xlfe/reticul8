@@ -4,19 +4,7 @@ mkdir -p .platformio
 docker build . -t net.xlfe/reticul8
 git submodule update --init
 
-DOCKER_OPT="-v $(pwd):/home/user/workspace --user $(id -u):$(id -g)"
-PROTOC="docker run -it --entrypoint /usr/bin/protoc ${DOCKER_OPT} net.xlfe/reticul8"
-
-function no() {
-mkdir -p menuconfig
-	#--entrypoint /home/user/workspace/.cache/packages/framework-espidf/tools/idf.py \
-docker run -it \
-	--entrypoint /bin/bash \
-	-w /home/user/workspace/.cache/packages/framework-espidf/ \
-	${DOCKER_OPT} \
-	-e IDF_BUILD_ARTIFACTS_DIR=/home/user/workspace/menuconfig/ \
-	local/pio
-}
+PROTOC="docker run -it --entrypoint /usr/bin/protoc -v $(pwd):/home/user/workspace --user $(id -u):$(id -g) net.xlfe/reticul8"
 
 mkdir -p java/src/
 # nanopb 
@@ -32,12 +20,20 @@ ${PROTOC} -Inanopb/generator/proto \
 	--proto_path=. \
 	reticul8.proto
 
-mv micro/src/reticul8.pb.h micro/include/
+mv -f micro/src/reticul8.pb.h micro/include/
 
-docker run --rm -it \
-	${DOCKER_OPT} \
-	-e COMPILE_TIME=`date '+%s'` \
-	-e PLATFORMIO_CORE_DIR=/home/user/workspace/.cache \
-	net.xlfe/reticul8 \
-	run -d /home/user/workspace/micro
+EXTRA_DEVS="$1"
+
+function pio() {
+	docker run -it \
+		-v $(pwd):/home/user/workspace \
+		-v $(pwd)/.platformio:/home/user/.platformio \
+		--user $(id -u):$(id -g) \
+		--workdir /home/user/workspace/micro \
+		${EXTRA_DEVS} net.xlfe/reticul8 $@
+}
+
+echo "now try some pio commands, like:\n
+# pio run -t menuconfig
+# pio run -t upload"
 
