@@ -274,3 +274,15 @@ COMPONENT_DEPENDS += reticul8
 
 #Used for build timestamp
 CPPFLAGS += -D"__COMPILE_TIME__ =`date '+%s'`"
+
+
+
+## Speed tests
+
+| Device | Communication Method | RTT | Sample size (different devices) |
+| ------ | -------------------- | --- | ------------------------------- |
+| SiliconLabs CP2104 | USB Serial | ~1.6 ms | n = 3 |
+| SiliconLabs CP2102N | USB Serial | ~2.9 ms | n = 1 |
+| QinHeng HL340 / CH340C | USB Seria | ~ 3.5 ms | n = 3 |
+| FTDI FT232 | USB Serial | ~1.86 ms | n =2 (using setserial low_latency) |
+| Raspberry PI 4 | Hardware Serial | 1.4 ms | n = 1 |
