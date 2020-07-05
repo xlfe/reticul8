@@ -274,6 +274,7 @@ COMPONENT_DEPENDS += reticul8
 
 #Used for build timestamp
 CPPFLAGS += -D"__COMPILE_TIME__ =`date '+%s'`"
+```
 
 
 
